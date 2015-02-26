@@ -1,0 +1,8 @@
+Makefile*
+debug/*
+object_script*
+pipeviz_plugin_import.cpp
+pipeviz
+*.o
+moc_*
+src/version_info.h
