@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QString>
 #include <QLineEdit>
+#include <QGridLayout>
 
 #include "GraphManager.h"
 
@@ -23,10 +24,13 @@ private slots:
 
 private:
 	QSharedPointer<GraphManager>         m_pGraphManager;
-	QMap<QString, QLineEdit *>           m_values;
+	QMap<QString, QWidget *>             m_values;
 	QString                              m_name;
 
 	void create();
+	void addParamSimple(GParamSpec *value, GstElement *element, QGridLayout *play);
+	void addParamEnum(GParamSpec *value, GstElement *element, QGridLayout *play);
+	void addParamFlags(GParamSpec *value, GstElement *element, QGridLayout *play);
 };
 
 

@@ -1,13 +1,13 @@
 #include "ElementProperties.h"
 
 #include <QDebug>
-#include <QGridLayout>
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QString>
 #include <QLabel>
 #include <QScrollArea>
 #include <QPushButton>
+#include <QComboBox>
 
 #include <gst/gst.h>
 
@@ -22,6 +22,213 @@ m_name(name)
 	create();
 }
 
+
+void ElementProperties::addParamEnum(GParamSpec *param, GstElement *element, QGridLayout *play)
+{
+	GValue value = { 0 };
+
+	g_value_init (&value, param -> value_type);
+	if(param -> flags & G_PARAM_READABLE) 
+		g_object_get_property (G_OBJECT(element), param -> name, &value);
+	else
+	{
+		const GValue *valueDef = g_param_spec_get_default_value(param);
+		g_value_copy(valueDef, &value);
+	}
+
+
+	QString propertyName = g_param_spec_get_name (param);
+	int propertyValue;
+
+	propertyValue = g_value_get_enum(&value);
+
+	GParamSpecEnum *penumSpec = G_PARAM_SPEC_ENUM(param);
+
+	if(!penumSpec)
+		return;
+
+	QComboBox *pcomBox = new QComboBox;
+
+	for(std::size_t i=0; i<penumSpec -> enum_class -> n_values; i++)
+	{
+		QVariant var(penumSpec -> enum_class -> values[i].value);
+		QString valueName = penumSpec -> enum_class -> values[i].value_name;
+
+		pcomBox -> addItem(valueName, var);
+
+		if(penumSpec -> enum_class -> values[i].value == propertyValue)
+			pcomBox -> setCurrentIndex(i);
+	}
+	
+
+	int row = play -> rowCount();
+
+	play -> addWidget(new QLabel(propertyName), row, 0);
+
+	play -> addWidget(pcomBox, row, 1);
+
+	m_values.insert(propertyName, pcomBox);
+}
+
+
+void ElementProperties::addParamFlags(GParamSpec *param, GstElement *element, QGridLayout *play)
+{
+	GValue value = { 0 };
+
+	g_value_init (&value, param -> value_type);
+	if(param -> flags & G_PARAM_READABLE) 
+		g_object_get_property (G_OBJECT(element), param -> name, &value);
+	else
+	{
+		const GValue *valueDef = g_param_spec_get_default_value(param);
+		g_value_copy(valueDef, &value);
+	}
+
+
+	QString propertyName = g_param_spec_get_name (param);
+	int propertyValue;
+
+	propertyValue = g_value_get_flags(&value);
+
+	GParamSpecFlags *pflagsSpec = G_PARAM_SPEC_FLAGS(param);
+
+	if(!pflagsSpec)
+		return;
+
+	QComboBox *pcomBox = new QComboBox;
+
+	for(std::size_t i=0; i<pflagsSpec -> flags_class -> n_values; i++)
+	{
+		QVariant var(pflagsSpec -> flags_class -> values[i].value);
+		QString valueName = pflagsSpec -> flags_class -> values[i].value_name;
+
+		pcomBox -> addItem(valueName, var);
+
+		if(pflagsSpec -> flags_class -> values[i].value == propertyValue)
+			pcomBox -> setCurrentIndex(i);
+	}
+	
+
+	int row = play -> rowCount();
+
+	play -> addWidget(new QLabel(propertyName), row, 0);
+
+	play -> addWidget(pcomBox, row, 1);
+
+	m_values.insert(propertyName, pcomBox);
+}
+
+
+
+void ElementProperties::addParamSimple(GParamSpec *param, GstElement *element, QGridLayout *play)
+{
+	bool readOnly = true;
+
+	if(param->flags & G_PARAM_WRITABLE)
+		readOnly = false;
+	
+	GValue value = { 0 };
+
+	g_value_init (&value, param -> value_type);
+	if(param -> flags & G_PARAM_READABLE) 
+		g_object_get_property (G_OBJECT(element), param -> name, &value);
+	else
+	{
+		const GValue *valueDef = g_param_spec_get_default_value(param);
+		g_value_copy(valueDef, &value);
+	}
+
+
+	QString propertyName = g_param_spec_get_name (param);
+	QString propertyValue;
+
+	bool skip = false;
+
+	switch (G_VALUE_TYPE (&value))
+	{
+		case G_TYPE_STRING:
+		{
+			const char *string_val = g_value_get_string (&value);
+			propertyValue = string_val;
+			break;
+		}
+		case G_TYPE_BOOLEAN:
+		{
+			gboolean bool_val = g_value_get_boolean (&value);
+			propertyValue = QString::number(bool_val);
+			break;
+		}
+		case G_TYPE_ULONG:
+		{
+			propertyValue = QString::number(g_value_get_ulong(&value));
+			break;
+		}
+		case G_TYPE_LONG:
+		{
+			propertyValue = QString::number(g_value_get_long(&value));
+			break;
+		}
+		case G_TYPE_UINT:
+		{
+			propertyValue = QString::number(g_value_get_uint(&value));
+			break;
+		}
+		case G_TYPE_INT:
+		{
+			propertyValue = QString::number(g_value_get_int(&value));
+			break;
+		}
+		case G_TYPE_UINT64:
+		{
+			propertyValue = QString::number(g_value_get_uint64(&value));
+			break;
+		}
+		case G_TYPE_INT64:
+		{
+			propertyValue = QString::number(g_value_get_int64(&value));
+			break;
+		}
+		case G_TYPE_FLOAT:
+		{
+			propertyValue = QString::number(g_value_get_float(&value));
+			break;
+		}
+		case G_TYPE_DOUBLE:
+		{
+			propertyValue = QString::number(g_value_get_double(&value));
+			break;
+		}
+		case G_TYPE_CHAR:
+		{
+			propertyValue = QString::number(g_value_get_char(&value));
+			break;
+		}
+		case G_TYPE_UCHAR:
+		{
+			propertyValue = QString::number(g_value_get_uchar(&value));
+			break;
+		}
+
+		default:	
+		{
+			skip = true;
+			qDebug() << "property " << propertyName << " not supported";
+			break;
+		}
+	};
+
+	int row = play -> rowCount();
+
+	play -> addWidget(new QLabel(propertyName), row, 0);
+
+	QLineEdit *ple = new QLineEdit(propertyValue);
+	ple -> setReadOnly(readOnly);
+	play -> addWidget(ple, row, 1);
+	if(!skip)
+		m_values.insert(propertyName, ple);
+	else
+		ple -> setReadOnly(true);
+}
 
 
 void ElementProperties::create()
@@ -41,98 +248,14 @@ void ElementProperties::create()
 
 	for(std::size_t i = 0; i<num_props; i++) 
 	{
-		bool readOnly = true;
 		GParamSpec *param = prop_specs[i];
-		GValue value = { 0 };
 
-		g_value_init (&value, param -> value_type);
-		if(param -> flags & G_PARAM_READABLE) 
-			g_object_get_property (G_OBJECT(element), param -> name, &value);
+		if(G_IS_PARAM_SPEC_ENUM(param))
+			addParamEnum(param, element, play);
+		else if(G_IS_PARAM_SPEC_FLAGS(param))
+			addParamFlags(param, element, play);
 		else
-		{
-			const GValue *valueDef = g_param_spec_get_default_value(param);
-			g_value_copy(valueDef, &value);
-		}
-
-		if(param->flags & G_PARAM_WRITABLE)
-			readOnly = false;
-
-		QString propertyName = g_param_spec_get_name (param);
-		QString propertyValue;
-
-		bool skip = false;
-
-		switch (G_VALUE_TYPE (&value))
-		{
-			case G_TYPE_STRING:
-			{
-				const char *string_val = g_value_get_string (&value);
-				propertyValue = string_val;
-				break;
-			}
-			case G_TYPE_BOOLEAN:
-			{
-				gboolean bool_val = g_value_get_boolean (&value);
-				propertyValue = QString::number(bool_val);
-				break;
-			}
-			case G_TYPE_ULONG:
-			{
-				propertyValue = QString::number(g_value_get_ulong(&value));
-				break;
-			}
-			case G_TYPE_LONG:
-			{
-				propertyValue = QString::number(g_value_get_long(&value));
-				break;
-			}
-			case G_TYPE_UINT:
-			{
-				propertyValue = QString::number(g_value_get_uint(&value));
-				break;
-			}
-			case G_TYPE_INT:
-			{
-				propertyValue = QString::number(g_value_get_int(&value));
-				break;
-			}
-			case G_TYPE_UINT64:
-			{
-				propertyValue = QString::number(g_value_get_uint64(&value));
-				break;
-			}
-			case G_TYPE_INT64:
-			{
-				propertyValue = QString::number(g_value_get_int64(&value));
-				break;
-			}
-			case G_TYPE_FLOAT:
-			{
-				propertyValue = QString::number(g_value_get_float(&value));
-				break;
-			}
-			case G_TYPE_DOUBLE:
-			{
-				propertyValue = QString::number(g_value_get_double(&value));
-				break;
-			}
-			default:	
-			{
-				skip = true;
-				qDebug() << "property " << propertyName << " not supported";
-				break;
-			}
-		};
-
-		play -> addWidget(new QLabel(propertyName), i, 0);
-
-		QLineEdit *ple = new QLineEdit(propertyValue);
-		ple -> setReadOnly(readOnly);
-		play -> addWidget(ple, i, 1);
-		if(!skip)
-			m_values.insert(propertyName, ple);
-		else
-			ple -> setReadOnly(true);
+			addParamSimple(param, element, play);
 	}
 
 	QVBoxLayout *pvblay = new QVBoxLayout;
@@ -176,7 +299,7 @@ void ElementProperties::applyClicked()
 	if(!element)
 		return;
 
-	QMap<QString, QLineEdit *>::iterator itr = m_values.begin();
+	QMap<QString, QWidget *>::iterator itr = m_values.begin();
 
 	for(;itr != m_values.end(); itr++)
 	{
@@ -192,76 +315,111 @@ void ElementProperties::applyClicked()
 		if(!(param -> flags & G_PARAM_WRITABLE))
 			continue;
 
-		QString valStr = itr.value() -> text();
+		QString valStr;
+
+		if(dynamic_cast<QLineEdit *>(itr.value()))
+			valStr = ((QLineEdit *) itr.value()) -> text();
+		else if(dynamic_cast<QComboBox *>(itr.value()))
+		{
+			QComboBox *pcomBox = (QComboBox *) itr.value();
+			int val = pcomBox -> itemData(pcomBox -> currentIndex()).toInt();
+			valStr = QString::number(val);
+		}
+
 		std::string tmpStr = itr.key().toStdString();
 		const char *propName = tmpStr.c_str();
-		switch (param -> value_type)
+
+		if(G_IS_PARAM_SPEC_ENUM(param) || G_IS_PARAM_SPEC_FLAGS(param))
 		{
-			case G_TYPE_STRING:
+			if(dynamic_cast<QComboBox *>(itr.value()))
 			{
-				g_object_set(G_OBJECT(element), propName, valStr.toStdString().c_str(), NULL);
-				break;
-			}
-			case G_TYPE_BOOLEAN:
-			{
-				gboolean val = valStr.toInt();
+				QComboBox *pcomBox = (QComboBox *) itr.value();
+				int val = pcomBox -> itemData(pcomBox -> currentIndex()).toInt();
 				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
 			}
-			case G_TYPE_ULONG:
+		}
+		else
+		{
+			switch (param -> value_type)
 			{
-				gulong val = valStr.toULong();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_LONG:
-			{
-				glong val = valStr.toLong();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_UINT:
-			{
-				guint val = valStr.toUInt();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_INT:
-			{
-				gint val = valStr.toInt();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_UINT64:
-			{
-				guint64 val = valStr.toULongLong();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_INT64:
-			{
-				gint64 val = valStr.toLongLong();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_FLOAT:
-			{
-				gfloat val = valStr.toFloat();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			case G_TYPE_DOUBLE:
-			{
-				gdouble val = valStr.toDouble();
-				g_object_set(G_OBJECT(element), propName, val, NULL);
-				break;
-			}
-			default:	
-			{
-				qDebug() << "property " << itr.key() << " not supported";
-				break;
-			}
-		};
+				case G_TYPE_STRING:
+				{
+					g_object_set(G_OBJECT(element), propName, valStr.toStdString().c_str(), NULL);
+					break;
+				}
+				case G_TYPE_BOOLEAN:
+				{
+					gboolean val = valStr.toInt();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_ULONG:
+				{
+					gulong val = valStr.toULong();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_LONG:
+				{
+					glong val = valStr.toLong();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_UINT:
+				{
+					guint val = valStr.toUInt();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_INT:
+				{
+					gint val = valStr.toInt();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_UINT64:
+				{
+					guint64 val = valStr.toULongLong();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_INT64:
+				{
+					gint64 val = valStr.toLongLong();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_FLOAT:
+				{
+					gfloat val = valStr.toFloat();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_DOUBLE:
+				{
+					gdouble val = valStr.toDouble();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_CHAR:
+				{
+					gchar val = valStr.toInt();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				case G_TYPE_UCHAR:
+				{
+					guchar val = valStr.toUInt();
+					g_object_set(G_OBJECT(element), propName, val, NULL);
+					break;
+				}
+				default:	
+				{
+					qDebug() << "property " << itr.key() << " not supported";
+					break;
+				}
+			};			
+		}
 	}
 
 	gst_object_unref(element);

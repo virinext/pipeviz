@@ -486,12 +486,12 @@ void GraphDisplay::showContextMenu(QMouseEvent *event)
 	if(res != GST_STATE_CHANGE_SUCCESS || state == GST_STATE_PAUSED || state == GST_STATE_PLAYING)
 		isActive = true;
 
-	bool hasSelection = false;
+	int selectedCount = 0;
 	for(std::size_t i=0; i<m_displayInfo.size(); i++)
 		if(m_displayInfo[i].m_isSelected)
-			hasSelection = true;
+			selectedCount++;
 
-	if(hasSelection)
+	if(selectedCount > 1)
 	{
 		QAction *pact = menu.addAction("Remove selected");
 		if(isActive)
