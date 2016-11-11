@@ -329,26 +329,30 @@ bool PipelineIE::Export(QSharedPointer<GraphManager> pgraph, const QString &file
 			GstPad *pad = gst_element_get_static_pad(element, info[i].m_pads[j].m_name.c_str());
 
 			GstPadTemplate *templ = gst_pad_get_pad_template(pad);
+			if (templ) {
+				QString presence;
+				switch(GST_PAD_TEMPLATE_PRESENCE(templ))
+				{
+					case GST_PAD_ALWAYS:
+						presence = "always";
+						break;
 
-			QString presence;
-			switch(GST_PAD_TEMPLATE_PRESENCE(templ))
-			{
-				case GST_PAD_ALWAYS:
-					presence = "always";
-					break;
+					case GST_PAD_SOMETIMES:
+						presence = "sometimes";
+						break;
 
-				case GST_PAD_SOMETIMES:
-					presence = "sometimes";
-					break;
+					case GST_PAD_REQUEST:
+						presence = "request";
+						break;
+				};
 
-				case GST_PAD_REQUEST:
-					presence = "request";
-					break;
-			};
-
-			xmlWriter.writeAttribute("presence", presence);
-			xmlWriter.writeAttribute("template-name", GST_PAD_TEMPLATE_NAME_TEMPLATE(templ));
-
+				xmlWriter.writeAttribute("presence", presence);
+				xmlWriter.writeAttribute("template-name", GST_PAD_TEMPLATE_NAME_TEMPLATE(templ));
+			} else {
+				qDebug() << "Unable to find a template for" << info[i].m_pads[j].m_name.c_str();
+				xmlWriter.writeAttribute("presence", "always");
+				xmlWriter.writeAttribute("template-name", "");
+			}
 			gst_object_unref(pad);
 
 			if(info[i].m_connections[j].m_elementId != (size_t)-1 &&
