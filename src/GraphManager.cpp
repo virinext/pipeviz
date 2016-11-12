@@ -59,7 +59,11 @@ bool GraphManager::AddPlugin(const char *plugin, const char *name)
 				if(uri)
 				{
 					qDebug() << "Set uri: " << uri;
+#if GST_VERSION_MAJOR >= 1
 					gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri, NULL);
+#else
+					gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri);
+#endif
 					g_free(uri);
 
 					QString dir = QFileInfo(path).absoluteDir().absolutePath();
@@ -74,7 +78,11 @@ bool GraphManager::AddPlugin(const char *plugin, const char *name)
 			if(!uri.isEmpty())
 			{
 				qDebug() << "Set uri: " << uri;
+#if GST_VERSION_MAJOR >= 1
 				gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri.toStdString().c_str(), NULL);
+#else
+				gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri.toStdString().c_str());
+#endif
 			}
 
 		}
@@ -106,7 +114,11 @@ bool GraphManager::RemovePlugin(const char *name)
 
 bool GraphManager::OpenUri(const char *uri, const char *name)
 {
+#if GST_VERSION_MAJOR >= 1
 	GstElement *element = gst_element_make_from_uri(GST_URI_SRC, uri, name, NULL);
+#else
+	GstElement *element = gst_element_make_from_uri(GST_URI_SRC, uri, name);
+#endif
 	if(!element)
 		return false;
 
@@ -158,20 +170,28 @@ std::vector <ElementInfo> GraphManager::GetInfo()
 
 	GstIterator *iter;
 	iter = gst_bin_iterate_elements (GST_BIN (m_pGraph));
+	GstElement* element = NULL;
 	bool done = false;
 	size_t id = 0;
 	while (!done) 
 	{
+#if GST_VERSION_MAJOR >= 1
 		GValue value = { 0 };
 		switch (gst_iterator_next (iter, &value)) 
 		{
 			case GST_ITERATOR_OK:
 			{
+				element = GST_ELEMENT(g_value_get_object(&value));
+#else
+		switch (gst_iterator_next (iter, (gpointer *)&element))
+		{
+			case GST_ITERATOR_OK:
+			{
+#endif
 				ElementInfo elementInfo;
-
 				elementInfo.m_id = id;
 				id++;
-				GstElement *element = GST_ELEMENT(g_value_get_object(&value));
+
 
 				gchar *name = gst_element_get_name(element);
 				elementInfo.m_name = name;
@@ -186,15 +206,22 @@ std::vector <ElementInfo> GraphManager::GetInfo()
 				GstIterator *padItr = gst_element_iterate_pads (element);
 				bool padDone = FALSE;
 				std::size_t padId = 0;
+				GstPad *pad;
 				while (!padDone) 
 				{
+#if GST_VERSION_MAJOR >= 1
 					GValue padVal = { 0 };
 					switch (gst_iterator_next (padItr, &padVal)) 
 					{
 						case GST_ITERATOR_OK:
 						{
-							GstPad *pad = GST_PAD(g_value_get_object(&padVal));
-
+							pad = GST_PAD(g_value_get_object(&padVal));
+#else
+					switch (gst_iterator_next (iter, (gpointer *)&pad))
+					{
+						case GST_ITERATOR_OK:
+						{
+#endif
 							PadInfo padInfo;
 							padInfo.m_id = padId;
 
@@ -211,7 +238,9 @@ std::vector <ElementInfo> GraphManager::GetInfo()
 								padInfo.m_type = PadInfo::None;
 
 							elementInfo.m_pads.push_back(padInfo);
+#if GST_VERSION_MAJOR >= 1
 							g_value_reset (&padVal);
+#endif
 							break;
 						}
 						case GST_ITERATOR_RESYNC:
@@ -222,8 +251,9 @@ std::vector <ElementInfo> GraphManager::GetInfo()
 					};
 					padId++;
 				}
-
+#if GST_VERSION_MAJOR >= 1
 				g_value_reset (&value);
+#endif
 				res.push_back(elementInfo);
 				break;
 			}
@@ -340,11 +370,22 @@ bool GraphManager::Stop()
 double GraphManager::GetPosition()
 {
 	gint64 current, duration;
-	if(!gst_element_query_position(m_pGraph, GST_FORMAT_TIME, &current))
+	GstFormat fmt = GST_FORMAT_TIME;
+#if GST_VERSION_MAJOR >= 1
+	if(!gst_element_query_position(m_pGraph, fmt, &current))
 		return 0;
+#else
+	if(!gst_element_query_position(m_pGraph, &fmt, &current))
+		return 0;
+#endif
 
-	if(!gst_element_query_duration(m_pGraph, GST_FORMAT_TIME, &duration))
+#if GST_VERSION_MAJOR >= 1
+	if(!gst_element_query_duration(m_pGraph, fmt, &duration))
 		return 0;
+#else
+	if(!gst_element_query_duration(m_pGraph, &fmt, &duration))
+		return 0;
+#endif
 
 	if(duration < 0 || current < 0)
 		return 0;
@@ -356,6 +397,7 @@ double GraphManager::GetPosition()
 bool GraphManager::SetPosition(double pos)
 {
 	GstQuery *query = gst_query_new_seeking(GST_FORMAT_TIME);
+	GstFormat fmt = GST_FORMAT_TIME;
 	if(!query)
 		return false;
 
@@ -372,8 +414,13 @@ bool GraphManager::SetPosition(double pos)
 
 	gint64 duration;
 
-	if(!gst_element_query_duration(m_pGraph, GST_FORMAT_TIME, &duration))
+#if GST_VERSION_MAJOR >= 1
+	if(!gst_element_query_duration(m_pGraph, fmt, &duration))
 		return 0;
+#else
+	if(!gst_element_query_duration(m_pGraph, &fmt, &duration))
+		return 0;
+#endif
 
 	if(duration < 0)
 		return 0;

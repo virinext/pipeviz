@@ -20,14 +20,24 @@ namespace
 	{
 		std::size_t num = 0;
 		GList *plugins;
-		plugins = gst_registry_get_plugin_list(gst_registry_get());
+		GstRegistry *registry;
+#if GST_VERSION_MAJOR >= 1
+		registry = gst_registry_get();
+#else
+		registry = gst_registry_get_default();
+#endif
+		plugins = gst_registry_get_plugin_list(registry);
 		while(plugins) 
 		{
 			GstPlugin *plugin;
 			plugin = (GstPlugin *) (plugins->data);
 			plugins = g_list_next (plugins);
-
-			GList *features = gst_registry_get_feature_list_by_plugin (gst_registry_get (),
+#if GST_VERSION_MAJOR >= 1
+			registry = gst_registry_get();
+#else
+			registry = gst_registry_get_default();
+#endif
+			GList *features = gst_registry_get_feature_list_by_plugin (registry,
 				gst_plugin_get_name (plugin));
 
 			while(features) 
@@ -116,16 +126,26 @@ void PluginsList::showInfo(QListWidgetItem *pitem, QListWidgetItem *previous)
 		qDebug() << "warning: " << pitem -> text() << " Not Found";
 		return;		
 	}
-
+#if GST_VERSION_MAJOR >= 1
 	GstPlugin *plugin = gst_plugin_feature_get_plugin (GST_PLUGIN_FEATURE (factory));
+#else
+	const gchar* plugin_name = GST_PLUGIN_FEATURE(factory)->plugin_name;
+	if (!plugin_name) {
+		return;
+	}
+	GstPlugin* plugin = gst_default_registry_find_plugin(plugin_name);
+#endif
 	if(!plugin)
 	{
 		qDebug() << "warning: " << pitem -> text() << " Not Found";
 		return;
 	}
 
-
+#if GST_VERSION_MAJOR >= 1
 	const gchar *release_date = gst_plugin_get_release_date_string (plugin);
+#else
+	const gchar *release_date = (plugin->desc.release_datetime) ? plugin->desc.release_datetime : "";
+#endif
 	const gchar *filename = gst_plugin_get_filename(plugin);
 
 	descr += "<b>Name</b>: " + QString(gst_plugin_get_name(plugin)) + "<br>";
