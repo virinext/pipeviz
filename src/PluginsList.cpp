@@ -165,6 +165,10 @@ void PluginsList::showInfo(QListWidgetItem *pitem, QListWidgetItem *previous)
 
 void PluginsList::insert(QListWidgetItem *pitem)
 {
+	if(!pitem) {
+		qDebug() << "Do not insert null item";
+		return;
+	}
 	qDebug() << "Insert: " << pitem -> text();
 
 	if(!m_pGraph || !m_pGraph -> AddPlugin(pitem -> text().toStdString().c_str(), NULL))
@@ -183,7 +187,7 @@ bool PluginsList::eventFilter(QObject *obj, QEvent *event)
 	{
 		QKeyEvent *key = static_cast<QKeyEvent*>(event);
 
-		if((key -> key() == Qt::Key_Enter) || (key -> key() == Qt::Key_Return))
+		if((key -> key() == Qt::Key_Enter) || (key -> key() == Qt::Key_Return) && m_pPlugins -> currentItem())
 		{
 			insert(m_pPlugins -> currentItem());
 			return true;

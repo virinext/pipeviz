@@ -15,7 +15,7 @@ class PluginsList: public QDialog
 {
 Q_OBJECT
 public:
-	PluginsList(QWidget *pwgt = NULL, Qt::WindowFlags f = 0);
+	PluginsList(QWidget *pwgt = NULL, Qt::WindowFlags f = Qt::Window);
 
 	GraphManager    *m_pGraph;
 
