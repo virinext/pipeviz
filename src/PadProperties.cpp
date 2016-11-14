@@ -29,7 +29,11 @@ QWidget(parent, flags)
 	play -> addWidget(plbl, 0, 1);
 
 	play -> addWidget(new QLabel("All caps:"), 1, 0);
+#if GST_VERSION_MAJOR >= 1
 	GstCaps *caps = gst_pad_query_caps(pad, NULL);
+#else
+	GstCaps *caps = gst_pad_get_caps(pad);
+#endif
 	gchar *str;
 	gchar *noSpecified = (gchar *)"not specified";
 	if(caps)
@@ -64,7 +68,11 @@ QWidget(parent, flags)
 	}
 
 	play -> addWidget(new QLabel("Current caps"), 3, 0);
+#if GST_VERSION_MAJOR >= 1
 	caps = gst_pad_get_current_caps(pad);
+#else
+	caps = gst_pad_get_negotiated_caps(pad);
+#endif
 	str = NULL;
 	if(caps)
 		str = gst_caps_to_string(caps);

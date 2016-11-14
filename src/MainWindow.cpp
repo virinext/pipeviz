@@ -161,7 +161,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	setStatusBar(m_pstatusBar);
 
 	restoreGeometry(CustomSettings::mainWindowGeometry());
-
 	startTimer(100);
 }
 
@@ -253,7 +252,11 @@ void MainWindow::Flush()
 	if(m_pGraph -> m_pGraph)
 	{
 		gst_element_send_event(GST_ELEMENT(m_pGraph -> m_pGraph), gst_event_new_flush_start());
+#if GST_VERSION_MAJOR >= 1
 		gst_element_send_event(GST_ELEMENT(m_pGraph -> m_pGraph), gst_event_new_flush_stop(true));
+#else
+		gst_element_send_event(GST_ELEMENT(m_pGraph -> m_pGraph), gst_event_new_flush_stop());
+#endif
 	}
 }
 
@@ -362,5 +365,9 @@ void MainWindow::About()
 	message = "<center>virinext@gmail.com</center><br>";
 	message += QString("<center>Version: ") + VERSION_STR + "</center><br>";
 	message += "<center>GUI Based on Qt</center>";
+	message += "<center>using ";
+	message += gst_version_string();
+	message += "</center>";
+
 	QMessageBox::about(this, "About", message);
 }

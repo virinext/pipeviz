@@ -16,19 +16,27 @@ static void clearPipeline(GstElement *pipeline)
 
 	GstIterator *iter;
 	iter = gst_bin_iterate_elements (GST_BIN (pipeline));
-	
+	GstElement *element  = NULL;
 	bool done = false;
 	while (!done) 
 	{
+#if GST_VERSION_MAJOR >= 1
 		GValue value = { 0 };
 		switch (gst_iterator_next (iter, &value)) 
 		{
 			case GST_ITERATOR_OK:
 			{
-				GstElement *element = GST_ELEMENT(g_value_get_object(&value));
+				element = GST_ELEMENT(g_value_get_object(&value));
+#else
+		switch (gst_iterator_next (iter, (gpointer *)&element)) 
+		{
+			case GST_ITERATOR_OK:
+			{
+#endif
 				gst_bin_remove(GST_BIN(pipeline), element);
+#if GST_VERSION_MAJOR >= 1
 				g_value_reset (&value);
-
+#endif
 				iter = gst_bin_iterate_elements (GST_BIN (pipeline));
 				if(!iter)
 					done = true;
