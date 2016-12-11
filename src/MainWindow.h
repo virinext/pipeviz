@@ -40,6 +40,7 @@ class MainWindow: public QMainWindow
 		void SaveAs();
 		void Open();
 
+		void ClearGraph();
 		void About();
 
 	private:

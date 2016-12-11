@@ -106,7 +106,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	QAction *pactFlush = ptb -> addAction(QIcon(pxFulsh), "Flush");
 	connect(pactFlush, SIGNAL(triggered()), SLOT(Flush()));
 
-
+	QAction *pactClear = ptb -> addAction("Clear");
+	connect(pactClear, SIGNAL(triggered()), SLOT(ClearGraph()));
 	ptb -> addSeparator();
 
 	m_pslider = new SeekSlider();
@@ -142,6 +143,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	pmenu -> addAction(pactPause);
 	pmenu -> addAction(pactStop);
 	pmenu -> addAction(pactFlush);
+	pmenu -> addSeparator();
+	pmenu -> addAction(pactClear);
 
 
 	pmenu = menuBar() -> addMenu("&Help");
@@ -259,6 +262,13 @@ void MainWindow::Flush()
 #endif
 	}
 }
+
+void MainWindow::ClearGraph()
+{
+	qDebug() << "ClearGraph";
+	PipelineIE::Clear(m_pGraph);
+}
+
 
 
 void MainWindow::Seek(int val)
