@@ -211,13 +211,13 @@ std::vector <ElementInfo> GraphManager::GetInfo()
 				{
 #if GST_VERSION_MAJOR >= 1
 					GValue padVal = { 0 };
-					switch (gst_iterator_next (padItr, &padVal)) 
+					switch (gst_iterator_next (padItr, &padVal))
 					{
 						case GST_ITERATOR_OK:
 						{
 							pad = GST_PAD(g_value_get_object(&padVal));
 #else
-					switch (gst_iterator_next (iter, (gpointer *)&pad))
+					switch (gst_iterator_next (padItr, (gpointer *)&pad))
 					{
 						case GST_ITERATOR_OK:
 						{
