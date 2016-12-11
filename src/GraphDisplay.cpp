@@ -363,6 +363,11 @@ void GraphDisplay::mouseReleaseEvent (QMouseEvent *event)
 				if(srcPad != NULL && dstPad != NULL)
 					break;
 			}
+			if(!infoSrc.m_name.compare(infoDst.m_name)) {
+			      qDebug() << "infoSrc == infoDst. No need to connect anything.";
+			      goto exit;
+
+			}
 
 			assert(srcPad != NULL && dstPad != NULL);
 
@@ -380,8 +385,13 @@ void GraphDisplay::mouseReleaseEvent (QMouseEvent *event)
 
 				QMessageBox::warning(this, "Coonection failed", msg);
 			}
+
 			m_info = m_pGraph -> GetInfo();
 			updateDisplayInfoIds();
+			if(g_str_has_prefix(infoDst.m_name.c_str(),"decodebin")) {
+				m_pGraph->Play();
+				qDebug() << "Launch play to discover the new pad";
+			}
 		}
 	}
 	else if(m_moveInfo.m_action == Select)
@@ -420,7 +430,7 @@ void GraphDisplay::mouseReleaseEvent (QMouseEvent *event)
 		}
 
 	}
-
+exit:
 	m_moveInfo.m_action = None;
 	m_moveInfo.m_elementId = -1;
 	m_moveInfo.m_padId = -1;
