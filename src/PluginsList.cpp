@@ -63,6 +63,7 @@ QDialog(pwgt, f)
 ,m_pGraph(NULL)
 {
 	m_pPlugins = new QListWidget;
+	m_pPlugins->setSortingEnabled(true);
 	m_plblInfo = new QLabel;
 
 	m_plblInfo -> setTextInteractionFlags(Qt::TextSelectableByMouse);
