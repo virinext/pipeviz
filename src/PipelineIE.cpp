@@ -620,3 +620,10 @@ bool PipelineIE::Import(QSharedPointer<GraphManager> pgraph, const QString &file
 
 	return true;
 }
+
+bool PipelineIE::Clear(QSharedPointer<GraphManager> pgraph)
+{
+	GstElement *pipeline = pgraph -> m_pGraph;
+	clearPipeline(pipeline);
+	return true;
+}
