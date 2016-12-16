@@ -162,7 +162,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	setCentralWidget(pscroll);
 	m_pstatusBar = new QStatusBar;
 	setStatusBar(m_pstatusBar);
-
+	m_pluginList = new PluginsList(this);
+	m_pluginList->setModal(false);
 	restoreGeometry(CustomSettings::mainWindowGeometry());
 	startTimer(100);
 }
@@ -171,15 +172,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 MainWindow::~MainWindow()
 {
 	CustomSettings::saveMainWindowGeometry(saveGeometry());
+	delete m_pluginList;
 }
 
 
 void MainWindow::AddPlugin()
 {
-	PluginsList lst(this);
-	lst.m_pGraph = m_pGraph.data();
-
-	lst.exec();
+	m_pluginList->m_pGraph = m_pGraph.data();
+	m_pluginList->show();
 	std::vector<ElementInfo> info = m_pGraph -> GetInfo();
 	m_pGraphDisplay -> update(info);
 }
