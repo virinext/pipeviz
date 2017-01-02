@@ -24,6 +24,33 @@ GraphDisplay::GraphDisplay(QWidget *parent, Qt::WindowFlags f):
 QWidget(parent, f)
 {
 	setFocusPolicy(Qt::WheelFocus);
+	setMouseTracking(true);
+}
+
+ElementInfo* GraphDisplay::getElement(std::size_t elementId)
+{
+	ElementInfo* element = NULL;
+	std::size_t i=0;
+	for(; i<m_info.size(); i++)
+	{
+		if(m_info[i].m_id == elementId) {
+			element = &m_info[i];
+			break;
+		}
+	}
+	return element;
+}
+
+PadInfo* GraphDisplay::getPad(ElementInfo* element, std::size_t padId)
+{
+  PadInfo* pad = NULL;
+  std::size_t j=0;
+  for(; j<element->m_pads.size(); j++)
+	  if(element->m_pads[j].m_id == padId) {
+	      pad = &element->m_pads[j];
+	      break;
+	  }
+  return pad;
 }
 
 void GraphDisplay::updateDisplayInfoIds()
@@ -467,6 +494,18 @@ void GraphDisplay::mouseMoveEvent(QMouseEvent *event)
 	{
 		m_moveInfo.m_position = event -> pos();
 		repaint();
+	} else {
+	    std::size_t elementId, padId;
+	    getIdByPosition(event -> pos(), elementId, padId);
+	    if (padId != ((size_t)-1)) {
+		ElementInfo* element = getElement(elementId);
+		PadInfo* pad = getPad(element, padId);
+		QString caps = m_pGraph->getPadCaps(element,pad,PAD_CAPS_ALL,true);
+		setToolTip(caps);
+	    }
+	    else
+	      setToolTip("");
+
 	}
 }
 

@@ -6,6 +6,14 @@
 #include <string>
 #include <vector>
 
+class QString;
+
+enum ePadCapsSubset {
+  PAD_CAPS_ALLOWED = 0,
+  PAD_CAPS_NEGOCIATED,
+  PAD_CAPS_ALL
+};
+
 struct PadInfo
 {
 	public:
@@ -93,6 +101,8 @@ public:
 	bool Play();
 	bool Pause();
 	bool Stop();
+
+	QString getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset, bool afTruncated = false);
 
 	GstElement       *m_pGraph;
 };
