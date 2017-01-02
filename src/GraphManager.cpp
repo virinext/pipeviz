@@ -8,6 +8,19 @@
 
 #include "CustomSettings.h"
 
+#define MAX_STR_CAPS_SIZE 150
+gchar* get_str_caps_limited(gchar* str)
+{
+  gchar* result;
+  if(strlen(str) > MAX_STR_CAPS_SIZE) {
+      result = g_strndup(str, MAX_STR_CAPS_SIZE);
+      for(int i = strlen(result)-1;i > strlen(result)-4 ;i--)
+	result[i] = '.';
+  } else
+    result = g_strdup(str);
+  return result;
+}
+
 GraphManager::GraphManager()
 {
 	m_pGraph = gst_pipeline_new ("pipeline");
@@ -19,6 +32,65 @@ GraphManager::~GraphManager()
 
 }
 
+QString GraphManager::getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset,  bool afTruncated)
+{
+	QString padCaps = "";
+	if(!elementInfo || !padInfo)
+	  return padCaps;
+
+	GstElement *element = gst_bin_get_by_name (GST_BIN(m_pGraph), elementInfo->m_name.c_str());
+
+	if(!element)
+		return padCaps;
+	GstPad *pad = gst_element_get_static_pad(GST_ELEMENT(element), padInfo->m_name.c_str());
+	if(!pad) {
+	    gst_object_unref(element);
+	    return padCaps;
+	}
+	GstCaps *caps;
+	switch(subset)
+	{
+	  case PAD_CAPS_ALLOWED:
+	    caps =  gst_pad_get_allowed_caps(pad);
+	    break;
+	  case PAD_CAPS_NEGOCIATED:
+#if GST_VERSION_MAJOR >= 1
+	caps = gst_pad_get_current_caps(pad, NULL);
+#else
+	caps = gst_pad_get_negotiated_caps(pad);
+#endif
+	  break;
+	  case PAD_CAPS_ALL:
+	  default:
+#if GST_VERSION_MAJOR >= 1
+	    caps = gst_pad_query_caps(pad, NULL);
+#else
+	    caps = gst_pad_get_caps(pad);
+#endif
+	}
+#if GST_VERSION_MAJOR >= 1
+	caps = gst_pad_query_caps(pad, NULL);
+#else
+	caps = gst_pad_get_caps(pad);
+#endif
+	if(caps) {
+	    gchar* str = gst_caps_to_string(caps);
+	    if (afTruncated) {
+		    gchar* str_limited = get_str_caps_limited(str);
+		    g_free(str);
+		    padCaps = str_limited;
+		    g_free(str_limited);
+	    } else {
+		 padCaps = str;
+		 g_free(str);
+	    }
+
+	}
+
+	gst_object_unref(element);
+	gst_object_unref (pad);
+	return padCaps;
+}
 
 bool GraphManager::AddPlugin(const char *plugin, const char *name)
 {

@@ -79,6 +79,9 @@ private:
 	void disconnect(std::size_t elementId, std::size_t padId);
 	void requestPad(std::size_t elementId);
 
+	ElementInfo* getElement(std::size_t elementId);
+	PadInfo* getPad(ElementInfo* element, std::size_t padId);
+
 	std::vector <ElementInfo>            m_info;
 	std::vector <ElementDisplayInfo>     m_displayInfo;
 
