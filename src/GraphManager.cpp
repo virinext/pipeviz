@@ -55,7 +55,7 @@ QString GraphManager::getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePa
 	    break;
 	  case PAD_CAPS_NEGOCIATED:
 #if GST_VERSION_MAJOR >= 1
-	caps = gst_pad_get_current_caps(pad, NULL);
+	caps = gst_pad_get_current_caps(pad);
 #else
 	caps = gst_pad_get_negotiated_caps(pad);
 #endif
