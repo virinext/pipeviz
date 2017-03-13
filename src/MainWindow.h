@@ -29,8 +29,8 @@ class MainWindow: public QMainWindow
 
 	private slots:
 		void AddPlugin();
-		void OpenFile();
-		void OpenUri();
+		void OpenMediaFile();
+		void OpenMediaUri();
 		void Play();
 		void Pause();
 		void Stop();

@@ -44,8 +44,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	connect(pactAdd, SIGNAL(triggered()), SLOT(AddPlugin()));
 
 
-	QAction *pactOpenFile = ptb -> addAction("Open File...");
-	connect(pactOpenFile, SIGNAL(triggered()), SLOT(OpenFile()));
+	QAction *pactOpenFile = ptb -> addAction("Open Media File...");
+	connect(pactOpenFile, SIGNAL(triggered()), SLOT(OpenMediaFile()));
 
 	ptb -> addSeparator();
 
@@ -122,6 +122,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 
 	QAction *pactOpen = pmenu -> addAction ("Open...", this, SLOT(Open()), QKeySequence::Open);
 	addAction (pactOpen);
+    
+    QAction *pactOpenMediaFile = pmenu -> addAction ("Open Media File...", this, SLOT(OpenMediaFile()), QKeySequence::Open);
+	addAction (pactOpenMediaFile);
 
 	QAction *pactSave = pmenu -> addAction ("Save", this, SLOT(Save()), QKeySequence::Save);
 	addAction (pactSave);
@@ -136,8 +139,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	pmenu = menuBar() -> addMenu("&Graph");
 
 	pmenu -> addAction(pactAdd);
-	pmenu -> addAction(pactOpenFile);
-	pmenu -> addAction ("Open Uri...", this, SLOT(OpenUri()));
+	pmenu -> addAction(pactOpenMediaFile);
+	pmenu -> addAction ("Open Media Uri...", this, SLOT(OpenMediaUri()));
 	pmenu -> addSeparator();
 	pmenu -> addAction(pactPlay);
 	pmenu -> addAction(pactPause);
@@ -186,11 +189,11 @@ void MainWindow::AddPlugin()
 
 
 
-void MainWindow::OpenFile()
+void MainWindow::OpenMediaFile()
 {
 	QString dir = CustomSettings::lastIODirectory();
 
-	QString path = QFileDialog::getOpenFileName(this, "Open File...", dir );
+	QString path = QFileDialog::getOpenFileName(this, "Open File...", dir);
 	if(!path.isEmpty())
 	{
 		gchar *uri = gst_filename_to_uri(path.toStdString().c_str(), NULL);
@@ -211,7 +214,7 @@ void MainWindow::OpenFile()
 }
 
 
-void MainWindow::OpenUri()
+void MainWindow::OpenMediaUri()
 {
 	QString uri = QInputDialog::getText(this, "Open Uri...", "Uri:");
 
@@ -329,8 +332,15 @@ void MainWindow::Save()
 {
 	if(m_fileName.isEmpty())
 		SaveAs();
-	else
+	else {
+		QFileInfo fileInfo(m_fileName);
+		if (fileInfo.completeSuffix().isEmpty() || fileInfo.completeSuffix() != "gpi")
+			m_fileName = m_fileName + ".gpi";
+
+
 		PipelineIE::Export(m_pGraph, m_fileName);
+
+	}
 }
 
 
@@ -338,7 +348,7 @@ void MainWindow::SaveAs()
 {
 	QString dir = CustomSettings::lastIODirectory();
 
-	QString path = QFileDialog::getSaveFileName(this, "Save As...", dir);
+	QString path = QFileDialog::getSaveFileName(this, "Save As...", dir, tr("*.gpi"));
 
 	if(!path.isEmpty())
 	{
@@ -355,7 +365,7 @@ void MainWindow::Open()
 {
 	QString dir = CustomSettings::lastIODirectory();
 
-	QString path = QFileDialog::getOpenFileName(this, "Open...", dir);
+	QString path = QFileDialog::getOpenFileName(this, "Open...", dir, tr("GPI (*.gpi *.xpm);;All files (*.*)"));
 
 	if(!path.isEmpty())
 	{
