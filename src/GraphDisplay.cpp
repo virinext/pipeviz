@@ -15,6 +15,7 @@
 
 #include "ElementProperties.h"
 #include "PadProperties.h"
+#include "CustomMenuAction.h"
 
 #define PAD_SIZE 8
 #define PAD_SIZE_ACTION 16
@@ -542,22 +543,25 @@ void GraphDisplay::showContextMenu(QMouseEvent *event)
 
 	if(selectedCount > 1)
 	{
-		QAction *pact = menu.addAction("Remove selected");
+		CustomMenuAction *pact = new CustomMenuAction("Remove selected", &menu);
+		menu.addAction(pact);
 		if(isActive)
 			pact -> setDisabled(true);
 
 	}
 	else if(padId != ((size_t)-1))
-		menu.addAction("Pad properties");
+		menu.addAction(new CustomMenuAction("Pad properties", &menu));
 	else if(elementId != ((size_t)-1))
 	{
-		menu.addAction("Element properties");
-		QAction *pact = menu.addAction("Remove");
+		menu.addAction(new CustomMenuAction("Element properties", &menu));
+		QAction *pact = new CustomMenuAction("Remove", &menu);
+		menu.addAction(pact);
 
 		if(isActive)
 			pact -> setDisabled(true);
 
-		pact = menu.addAction("Request pad...");
+		pact = new CustomMenuAction("Request pad...", &menu);
+		menu.addAction(pact);
 	}
 	else
 	{
@@ -595,7 +599,9 @@ void GraphDisplay::showContextMenu(QMouseEvent *event)
 						elementId = m_info[i].m_id;
 						padId = m_info[i].m_pads[j].m_id;
 
-						QAction *pact = menu.addAction("Disconnect");
+						QAction *pact = new CustomMenuAction("Disconnect", &menu);
+						menu.addAction(pact);
+
 
 						if(isActive)
 							pact -> setDisabled(true);
@@ -610,20 +616,20 @@ void GraphDisplay::showContextMenu(QMouseEvent *event)
 
 	if(!menu.isEmpty())
 	{
-		QAction *pact = menu.exec(event -> globalPos());
+		CustomMenuAction *pact = (CustomMenuAction*)menu.exec(event -> globalPos());
 		if(pact)
 		{
-			if(pact -> text() == "Remove")
+			if(pact -> getName() == "Remove")
 				removePlugin(elementId);
-			else if(pact -> text() == "Element properties")
+			else if(pact -> getName() == "Element properties")
 				showElementProperties(elementId);
-			else if(pact -> text() == "Pad properties")
+			else if(pact -> getName() == "Pad properties")
 				showPadProperties(elementId, padId);
-			else if(pact -> text() == "Disconnect")
+			else if(pact -> getName() == "Disconnect")
 				disconnect(elementId, padId);
-			else if(pact -> text() == "Request pad...")
+			else if(pact -> getName() == "Request pad...")
 				requestPad(elementId);
-			else if(pact -> text() == "Remove selected")
+			else if(pact -> getName() == "Remove selected")
 				removeSelected();
 		}
 	}

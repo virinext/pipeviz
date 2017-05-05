@@ -28,7 +28,8 @@ HEADERS += src/PluginsList.h        \
 		src/PadProperties.h         \
 		src/PipelineIE.h            \
 		src/CustomSettings.h        \
-		src/SeekSlider.h
+		src/SeekSlider.h			\
+		src/CustomMenuAction.h
 
 SOURCES += src/main.cpp             \
 		src/PluginsList.cpp         \
@@ -39,4 +40,5 @@ SOURCES += src/main.cpp             \
 		src/PadProperties.cpp       \
 		src/PipelineIE.cpp          \
 		src/CustomSettings.cpp      \
-		src/SeekSlider.cpp
+		src/SeekSlider.cpp			\
+		src/CustomMenuAction.cpp
