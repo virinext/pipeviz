@@ -7,6 +7,7 @@
 #include <vector>
 
 class QString;
+class PluginsList;
 
 enum ePadCapsSubset {
   PAD_CAPS_ALLOWED = 0,
@@ -97,6 +98,7 @@ public:
 	double GetPosition();
 	bool SetPosition(double);
 
+	PluginsList* getPluginsList() { return m_pluginsList;}
 
 	bool Play();
 	bool Pause();
@@ -105,6 +107,8 @@ public:
 	QString getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset, bool afTruncated = false);
 
 	GstElement       *m_pGraph;
+	PluginsList       *m_pluginsList;
+
 };
 
 

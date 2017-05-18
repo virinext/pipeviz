@@ -1,4 +1,5 @@
 #include "GraphManager.h"
+#include "PluginsList.h"
 #include <QDebug>
 
 #include <QString>
@@ -24,12 +25,12 @@ gchar* get_str_caps_limited(gchar* str)
 GraphManager::GraphManager()
 {
 	m_pGraph = gst_pipeline_new ("pipeline");
+	m_pluginsList = new PluginsList();
 }
-
 
 GraphManager::~GraphManager()
 {
-
+  delete m_pluginsList;
 }
 
 QString GraphManager::getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset,  bool afTruncated)
@@ -114,7 +115,6 @@ bool GraphManager::AddPlugin(const char *plugin, const char *name)
 			}
 		}
 
-
 		if(isFile)
 		{
 			QString path;
@@ -158,8 +158,6 @@ bool GraphManager::AddPlugin(const char *plugin, const char *name)
 			}
 
 		}
-
-
 	}
 
 	bool res = gst_bin_add(GST_BIN(m_pGraph), pel);
@@ -435,9 +433,6 @@ bool GraphManager::Stop()
 	GstStateChangeReturn res = gst_element_set_state(m_pGraph, GST_STATE_READY);
 	return res == GST_STATE_CHANGE_SUCCESS;
 }
-
-
-
 
 double GraphManager::GetPosition()
 {

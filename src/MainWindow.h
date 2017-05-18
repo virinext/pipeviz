@@ -15,7 +15,7 @@
 #include "GraphManager.h"
 
 class GraphDisplay;
-class PluginsList;
+class PluginsListDialog;
 
 class MainWindow: public QMainWindow
 {
@@ -52,7 +52,7 @@ class MainWindow: public QMainWindow
 		QSlider                         *m_pslider;
 
 		QString                          m_fileName;
-		PluginsList			*m_pluginList;
+		PluginsListDialog               *m_pluginListDlg;
 };
 
 
