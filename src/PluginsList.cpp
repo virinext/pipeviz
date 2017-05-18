@@ -16,10 +16,11 @@
 
 namespace 
 {
-	void InitPluginsList(QListWidget *plwgt)
+	GList* GetPluginsList()
 	{
 		std::size_t num = 0;
 		GList *plugins;
+		GList* plugins_list = NULL;
 		GstRegistry *registry;
 #if GST_VERSION_MAJOR >= 1
 		registry = gst_registry_get();
@@ -27,7 +28,7 @@ namespace
 		registry = gst_registry_get_default();
 #endif
 		plugins = gst_registry_get_plugin_list(registry);
-		while(plugins) 
+		while(plugins)
 		{
 			GstPlugin *plugin;
 			plugin = (GstPlugin *) (plugins->data);
@@ -40,23 +41,40 @@ namespace
 			GList *features = gst_registry_get_feature_list_by_plugin (registry,
 				gst_plugin_get_name (plugin));
 
-			while(features) 
+			while(features)
 			{
 				GstPluginFeature *feature;
 				feature = GST_PLUGIN_FEATURE (features->data);
-				if(GST_IS_ELEMENT_FACTORY (feature)) 
+				if(GST_IS_ELEMENT_FACTORY (feature))
 				{
 					GstElementFactory *factory;
 					factory = GST_ELEMENT_FACTORY (feature);
-					plwgt -> addItem(GST_OBJECT_NAME (factory));
+					plugins_list = g_list_append(plugins_list, GST_OBJECT_NAME (factory));
 					num++;
 				}
 
 				features = g_list_next (features);
 			}
 		}
+		return plugins_list;
 	}
-}
+
+	void InitPluginsList(QListWidget *plwgt)
+	{
+		GList* plugins_list = GetPluginsList();
+		GList* l;
+		GstElementFactory* factory;
+		std::size_t num = 0;
+
+		for (l = plugins_list; l != NULL; l = l->next)
+		  {
+			plwgt -> addItem((gchar*)l->data);
+			num++;
+
+		    // do something with l->data
+		  }
+	}
+};
 
 PluginsList::PluginsList(QWidget *pwgt, Qt::WindowFlags f):
 QDialog(pwgt, f)
@@ -179,7 +197,7 @@ void PluginsList::showInfo(QListWidgetItem *pitem, QListWidgetItem *previous)
 	}
 	descr += "<b>Binary package</b>: " + QString(gst_plugin_get_package (plugin)) + "<br>";
 	descr += "<b>Origin URL</b>: " + QString(gst_plugin_get_origin (plugin)) + "<br>";
-
+	descr += "<b>Rank</b>: " + QString::number(gst_plugin_feature_get_rank(GST_PLUGIN_FEATURE(factory)));
 	m_plblInfo -> setText(descr);
 }
 
