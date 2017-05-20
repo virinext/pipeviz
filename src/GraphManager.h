@@ -85,10 +85,11 @@ public:
 	GraphManager();
 	~GraphManager();
 
-	bool AddPlugin(const char *plugin, const char *name);
+	gchar* AddPlugin(const char *plugin, const char *name);
 	bool RemovePlugin(const char *name);
 	bool Connect(const char *srcElement, const char *srcPad,
 		const char *dstElement, const char *dstPad);
+	bool Connect(const char *srcElement, const char *dstElement);
 	bool Disconnect(const char *srcElement, const char *srcPad,
 		const char *dstElement, const char *dstPad);
 	std::vector <ElementInfo> GetInfo();
@@ -99,6 +100,8 @@ public:
 	bool SetPosition(double);
 
 	PluginsList* getPluginsList() { return m_pluginsList;}
+	bool CanConnect(const char *srcName,const char *srcPadName, const char *destName, bool noANY = true);
+
 
 	bool Play();
 	bool Pause();

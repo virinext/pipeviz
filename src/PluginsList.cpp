@@ -35,7 +35,7 @@ PluginsList::PluginsList()
 
 PluginsList::~PluginsList()
 {
-  g_list_free(m_pluginsList);
+  //g_list_free(m_pluginsList);
 }
 
 void PluginsList::init()
