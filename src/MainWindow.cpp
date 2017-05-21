@@ -165,29 +165,25 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags):
 	setCentralWidget(pscroll);
 	m_pstatusBar = new QStatusBar;
 	setStatusBar(m_pstatusBar);
-	m_pluginList = new PluginsList(this);
-	m_pluginList->setModal(false);
+	m_pluginListDlg = new PluginsListDialog(m_pGraph->getPluginsList(), this);
+	m_pluginListDlg->setModal(false);
 	restoreGeometry(CustomSettings::mainWindowGeometry());
 	startTimer(100);
 }
 
-
 MainWindow::~MainWindow()
 {
 	CustomSettings::saveMainWindowGeometry(saveGeometry());
-	delete m_pluginList;
+	delete m_pluginListDlg;
 }
-
 
 void MainWindow::AddPlugin()
 {
-	m_pluginList->m_pGraph = m_pGraph.data();
-	m_pluginList->show();
+  m_pluginListDlg->setGraph(m_pGraph.data());
+  m_pluginListDlg->show();
 	std::vector<ElementInfo> info = m_pGraph -> GetInfo();
 	m_pGraphDisplay -> update(info);
 }
-
-
 
 void MainWindow::OpenMediaFile()
 {
@@ -229,13 +225,11 @@ void MainWindow::OpenMediaUri()
 
 }
 
-
 void MainWindow::Play()
 {
 	qDebug() << "Play";
 	m_pGraph -> Play();
 }
-
 
 void MainWindow::Pause()
 {
@@ -243,13 +237,11 @@ void MainWindow::Pause()
 	m_pGraph -> Pause();
 }
 
-
 void MainWindow::Stop()
 {
 	qDebug() << "Stop";
 	m_pGraph -> Stop();
 }
-
 
 void MainWindow::Flush()
 {
@@ -272,8 +264,6 @@ void MainWindow::ClearGraph()
 	PipelineIE::Clear(m_pGraph);
 }
 
-
-
 void MainWindow::Seek(int val)
 {
 	if(m_pGraph -> SetPosition((double)(val) / m_pslider -> maximum()))
@@ -281,7 +271,6 @@ void MainWindow::Seek(int val)
 	else
 		qDebug() << "Seek to" << val << "was FAILED"; 
 }
-
 
 void MainWindow::timerEvent(QTimerEvent *)
 {
@@ -326,8 +315,6 @@ void MainWindow::timerEvent(QTimerEvent *)
 	m_pGraphDisplay -> update(m_pGraph -> GetInfo());
 }
 
-
-
 void MainWindow::Save()
 {
 	if(m_fileName.isEmpty())
@@ -342,7 +329,6 @@ void MainWindow::Save()
 
 	}
 }
-
 
 void MainWindow::SaveAs()
 {
@@ -360,7 +346,6 @@ void MainWindow::SaveAs()
 	}
 }
 
-
 void MainWindow::Open()
 {
 	QString dir = CustomSettings::lastIODirectory();
@@ -376,7 +361,6 @@ void MainWindow::Open()
 		CustomSettings::saveLastIODirectory(dir);
 	}
 }
-
 
 void MainWindow::About()
 {

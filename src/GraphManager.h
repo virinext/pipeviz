@@ -7,6 +7,7 @@
 #include <vector>
 
 class QString;
+class PluginsList;
 
 enum ePadCapsSubset {
   PAD_CAPS_ALLOWED = 0,
@@ -84,10 +85,11 @@ public:
 	GraphManager();
 	~GraphManager();
 
-	bool AddPlugin(const char *plugin, const char *name);
+	gchar* AddPlugin(const char *plugin, const char *name);
 	bool RemovePlugin(const char *name);
 	bool Connect(const char *srcElement, const char *srcPad,
 		const char *dstElement, const char *dstPad);
+	bool Connect(const char *srcElement, const char *dstElement);
 	bool Disconnect(const char *srcElement, const char *srcPad,
 		const char *dstElement, const char *dstPad);
 	std::vector <ElementInfo> GetInfo();
@@ -97,6 +99,9 @@ public:
 	double GetPosition();
 	bool SetPosition(double);
 
+	PluginsList* getPluginsList() { return m_pluginsList;}
+	bool CanConnect(const char *srcName,const char *srcPadName, const char *destName, bool noANY = true);
+
 
 	bool Play();
 	bool Pause();
@@ -105,6 +110,8 @@ public:
 	QString getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset, bool afTruncated = false);
 
 	GstElement       *m_pGraph;
+	PluginsList       *m_pluginsList;
+
 };
 
 

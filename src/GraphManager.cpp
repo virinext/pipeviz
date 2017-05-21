@@ -1,4 +1,5 @@
 #include "GraphManager.h"
+#include "PluginsList.h"
 #include <QDebug>
 
 #include <QString>
@@ -21,15 +22,25 @@ gchar* get_str_caps_limited(gchar* str)
   return result;
 }
 
+static void
+typefind_have_type_callback (GstElement * typefind,
+    guint probability, GstCaps * caps, GraphManager * thiz)
+{
+  gchar *caps_description = gst_caps_to_string (caps);
+  qDebug() << "Found caps " << caps_description << " with probability " << probability;
+  g_free(caps_description);
+  thiz->Pause();
+}
+
 GraphManager::GraphManager()
 {
 	m_pGraph = gst_pipeline_new ("pipeline");
+	m_pluginsList = new PluginsList();
 }
-
 
 GraphManager::~GraphManager()
 {
-
+  delete m_pluginsList;
 }
 
 QString GraphManager::getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset,  bool afTruncated)
@@ -92,11 +103,11 @@ QString GraphManager::getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePa
 	return padCaps;
 }
 
-bool GraphManager::AddPlugin(const char *plugin, const char *name)
+gchar* GraphManager::AddPlugin(const char *plugin, const char *name)
 {
 	GstElement *pel = gst_element_factory_make(plugin, name);
 	if(!pel)
-		return false;
+		return NULL;
 
 	if(GST_IS_URI_HANDLER(pel))
 	{
@@ -114,14 +125,13 @@ bool GraphManager::AddPlugin(const char *plugin, const char *name)
 			}
 		}
 
-
 		if(isFile)
 		{
 			QString path;
 			QString dir = CustomSettings::lastIODirectory();
 
 			if(gst_uri_handler_get_uri_type(GST_URI_HANDLER(pel)) == GST_URI_SRC) 
-				path = QFileDialog::getOpenFileName(NULL, "Open Source File...", dir);
+				path = QFileDialog::getOpenFileName(NULL, "Open Media Source File...", dir);
 			else
 				path = QFileDialog::getSaveFileName(NULL, "Open Sink File...", dir);
 
@@ -156,17 +166,18 @@ bool GraphManager::AddPlugin(const char *plugin, const char *name)
 				gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri.toStdString().c_str());
 #endif
 			}
-
 		}
-
-
 	}
 
 	bool res = gst_bin_add(GST_BIN(m_pGraph), pel);
-	if(res)
+	if (res)
 		gst_element_sync_state_with_parent(pel);
+	else {
+	  gst_object_unref(pel);
+	  return NULL;
+	}
 
-	return res;
+	return gst_element_get_name(pel);
 }
 
 
@@ -201,7 +212,6 @@ bool GraphManager::OpenUri(const char *uri, const char *name)
 	return res;
 }
 
-
 bool GraphManager::Connect(const char *srcElement, const char *srcPad,
 	const char *dstElement, const char *dstPad)
 {
@@ -218,7 +228,28 @@ bool GraphManager::Connect(const char *srcElement, const char *srcPad,
 	return res;
 }
 
+bool GraphManager::Connect(const char *srcElement, const char *dstElement)
+{
+  GstElement *src = gst_bin_get_by_name (GST_BIN(m_pGraph), srcElement);
+  GstElement *dst = gst_bin_get_by_name (GST_BIN(m_pGraph), dstElement);
 
+  bool res = gst_element_link(src, dst);
+
+  gboolean seekRes = gst_element_seek_simple(m_pGraph, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, 0);
+
+  /* add a callback to handle have-type signal */
+  if (g_str_has_prefix(dstElement,"typefindelement")) {
+      g_signal_connect (dst, "have-type",
+          G_CALLBACK (typefind_have_type_callback),
+          this);
+      Play();
+  }
+
+  gst_object_unref(src);
+  gst_object_unref(dst);
+
+  return res;
+}
 
 bool GraphManager::Disconnect(const char *srcElement, const char *srcPad,
 	const char *dstElement, const char *dstPad)
@@ -234,7 +265,6 @@ bool GraphManager::Disconnect(const char *srcElement, const char *srcPad,
 
 	return true;
 }
-
 
 std::vector <ElementInfo> GraphManager::GetInfo()
 {
@@ -263,7 +293,6 @@ std::vector <ElementInfo> GraphManager::GetInfo()
 				ElementInfo elementInfo;
 				elementInfo.m_id = id;
 				id++;
-
 
 				gchar *name = gst_element_get_name(element);
 				elementInfo.m_name = name;
@@ -409,7 +438,7 @@ bool GraphManager::Play()
 		qDebug() << "state changing to Play was FAILED";
 	}
 
-	return res == GST_STATE_PLAYING;
+	return state == GST_STATE_PLAYING;
 }
 
 
@@ -426,18 +455,14 @@ bool GraphManager::Pause()
 		qDebug() << "state changing to Pause was FAILED";
 	}
 
-	return res == GST_STATE_PAUSED;
+	return state == GST_STATE_PAUSED;
 }
-
 
 bool GraphManager::Stop()
 {
 	GstStateChangeReturn res = gst_element_set_state(m_pGraph, GST_STATE_READY);
 	return res == GST_STATE_CHANGE_SUCCESS;
 }
-
-
-
 
 double GraphManager::GetPosition()
 {
@@ -500,4 +525,85 @@ bool GraphManager::SetPosition(double pos)
 	gboolean seekRes = gst_element_seek_simple(m_pGraph, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, duration * pos);
 
 	return seekRes;
+}
+
+bool GraphManager::CanConnect(const char *srcName, const char *srcPadName, const char *destName, bool noANY)
+{
+  bool ret = false;
+  bool added = false;
+  GstElement *dest = NULL;
+  GstElement *src = NULL;
+  GstPad* srcPad = NULL;
+  GstCaps* srcCaps = NULL;
+  GstElementFactory *destFactory = NULL;
+
+  src = gst_bin_get_by_name (GST_BIN(m_pGraph), srcName);
+  if (!src) {
+    qDebug() << "Unable to get the src element: " << srcName;
+    goto done;
+  }
+
+  srcPad = gst_element_get_static_pad(src, srcPadName);
+  if (!srcPad) {
+      qDebug() << "Unable to get the src pad";
+      goto done;
+  }
+
+  srcCaps = gst_pad_get_current_caps(srcPad);
+  if (!srcCaps) {
+      qDebug() << "Unable to get the current caps for pad:" << srcPadName;
+      srcCaps =gst_pad_get_pad_template_caps(srcPad);
+      if (!srcCaps) {
+          qDebug() << "Unable to get the template caps for pad:" << srcPadName;
+          goto done;
+      }
+  }
+
+  dest = gst_element_factory_make(destName, NULL);
+  if (!dest) {
+      qDebug() << "Unable to get the dest element: " << destName;
+      goto done;
+  }
+
+  destFactory = gst_element_get_factory(dest);
+  if (!destFactory) {
+      qDebug() << "Unable to get the dest factory";
+      goto done;
+  }
+  if (noANY && gst_element_factory_can_sink_any_caps(destFactory, srcCaps)) {
+    qDebug() << "The dest element " << destName << " can sink any caps";
+    goto done;
+  }
+
+  if(!gst_element_factory_can_sink_all_caps(destFactory, srcCaps)) {
+    gchar* caps_string = gst_caps_to_string(srcCaps);
+    qDebug() << "The dest element " << destName << " can not sink this caps: " << caps_string;
+    g_free (caps_string);
+    goto done;
+  }
+
+  added = gst_bin_add(GST_BIN(m_pGraph), dest);
+  if (!added) {
+      qDebug() << "Unable to add element to the bin";
+      goto done;
+  }
+
+  ret = gst_element_link(src,dest);
+  if (ret) {
+      qDebug() << "Can link elements src " << GST_OBJECT_NAME(src) << " with dest " << GST_OBJECT_NAME(dest);
+      gst_element_unlink(src,dest);
+  }
+
+done:
+  if (added) {
+    gst_bin_remove(GST_BIN(m_pGraph), dest);
+    dest = NULL;
+  }
+  if (src)
+    gst_object_unref(src);
+  if (srcPad)
+    gst_object_unref(srcPad);
+  if (dest)
+    gst_object_unref(dest);
+  return ret;
 }

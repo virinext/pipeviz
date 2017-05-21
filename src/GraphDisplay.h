@@ -72,15 +72,17 @@ private:
 	void showContextMenu(QMouseEvent *event);
 	void showElementProperties(std::size_t id);
 	void showPadProperties(std::size_t elementId, std::size_t padId);
+	void renderPad(std::size_t elementId, std::size_t padId, bool capsAny);
 	void removePlugin(std::size_t id);
 	void removeSelected();
 	void getIdByPosition(const QPoint &pos, std::size_t &elementId, std::size_t &padId);
 	QPoint getPadPosition(std::size_t elementId, std::size_t padId);
 	void disconnect(std::size_t elementId, std::size_t padId);
 	void requestPad(std::size_t elementId);
+	void connectPlugin(std::size_t elementId, const QString& destElementName);
 
 	ElementInfo* getElement(std::size_t elementId);
-	PadInfo* getPad(ElementInfo* element, std::size_t padId);
+	PadInfo* getPad(std::size_t elementId, std::size_t padId);
 
 	std::vector <ElementInfo>            m_info;
 	std::vector <ElementDisplayInfo>     m_displayInfo;
