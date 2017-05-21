@@ -22,6 +22,16 @@ gchar* get_str_caps_limited(gchar* str)
   return result;
 }
 
+static void
+typefind_have_type_callback (GstElement * typefind,
+    guint probability, GstCaps * caps, GraphManager * thiz)
+{
+  gchar *caps_description = gst_caps_to_string (caps);
+  qDebug() << "Found caps " << caps_description << " with probability " << probability;
+  g_free(caps_description);
+  thiz->Pause();
+}
+
 GraphManager::GraphManager()
 {
 	m_pGraph = gst_pipeline_new ("pipeline");
@@ -227,6 +237,14 @@ bool GraphManager::Connect(const char *srcElement, const char *dstElement)
 
   gboolean seekRes = gst_element_seek_simple(m_pGraph, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, 0);
 
+  /* add a callback to handle have-type signal */
+  if (g_str_has_prefix(dstElement,"typefindelement")) {
+      g_signal_connect (dst, "have-type",
+          G_CALLBACK (typefind_have_type_callback),
+          this);
+      Play();
+  }
+
   gst_object_unref(src);
   gst_object_unref(dst);
 
@@ -420,7 +438,7 @@ bool GraphManager::Play()
 		qDebug() << "state changing to Play was FAILED";
 	}
 
-	return res == GST_STATE_PLAYING;
+	return state == GST_STATE_PLAYING;
 }
 
 
@@ -437,9 +455,8 @@ bool GraphManager::Pause()
 		qDebug() << "state changing to Pause was FAILED";
 	}
 
-	return res == GST_STATE_PAUSED;
+	return state == GST_STATE_PAUSED;
 }
-
 
 bool GraphManager::Stop()
 {

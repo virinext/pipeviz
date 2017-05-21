@@ -545,6 +545,7 @@ void GraphDisplay::showContextMenu(QMouseEvent *event)
 		menu.addAction(new CustomMenuAction("Render", &menu));
 		menu.addAction(new CustomMenuAction("Render anyway", &menu));
 		menu.addAction(new CustomMenuAction("Pad properties", &menu));
+		menu.addAction(new CustomMenuAction("typefind", "ElementName", &menu));
 	}
 	else if(elementId != ((size_t)-1))
 	{
@@ -627,8 +628,8 @@ void GraphDisplay::showContextMenu(QMouseEvent *event)
 				requestPad(elementId);
 			else if (pact -> getName() == "Remove selected")
 				removeSelected();
-			else if(pact->getName() == "ElementName")
-				addPlugin(pact->text());
+			else if (pact->getName() == "ElementName")
+				connectPlugin(elementId, pact->text());
 		}
 	}
 }
@@ -672,10 +673,13 @@ void GraphDisplay::removePlugin(std::size_t id)
 	}
 }
 
-void GraphDisplay::addPlugin(const QString& name)
+void GraphDisplay::connectPlugin(std::size_t elementId, const QString& name)
 {
+  ElementInfo* element = getElement(elementId);
+  gchar* pluginName = m_pGraph->AddPlugin(name.toStdString().c_str(), NULL);
+   m_pGraph->Connect(element->m_name.c_str(), pluginName);
+   g_free(pluginName);
 }
-
 
 void GraphDisplay::showElementProperties(std::size_t id)
 {
@@ -712,7 +716,6 @@ void GraphDisplay::renderPad(std::size_t elementId, std::size_t padId, bool caps
 
 	for (l = plugins_list; l != NULL; l = l->next) {
 	    Plugin* plugin = (Plugin*)(l->data);
-	    if (m_pGraph->CanConnect(element->m_name.c_str(), pad->m_name.c_str() , plugin->getName().toStdString().c_str())) {
 	    if (m_pGraph->CanConnect(element->m_name.c_str(), pad->m_name.c_str() , plugin->getName().toStdString().c_str(), capsAny)) {
 	      gchar* pluginName = m_pGraph->AddPlugin(plugin->getName().toStdString().c_str(), NULL);
 	      m_pGraph->Connect(element->m_name.c_str(), pluginName);

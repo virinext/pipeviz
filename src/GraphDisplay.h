@@ -79,7 +79,7 @@ private:
 	QPoint getPadPosition(std::size_t elementId, std::size_t padId);
 	void disconnect(std::size_t elementId, std::size_t padId);
 	void requestPad(std::size_t elementId);
-	void addPlugin(const QString& name);
+	void connectPlugin(std::size_t elementId, const QString& destElementName);
 
 	ElementInfo* getElement(std::size_t elementId);
 	PadInfo* getPad(std::size_t elementId, std::size_t padId);
