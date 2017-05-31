@@ -3,7 +3,6 @@
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QDebug>
 #include <QScrollArea>
 
 #include <gst/gst.h>

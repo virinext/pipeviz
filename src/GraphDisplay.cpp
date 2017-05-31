@@ -11,8 +11,6 @@
 #include <QTableWidget>
 #include <QVariant>
 
-#include <QDebug>
-
 #include "ElementProperties.h"
 #include "PadProperties.h"
 #include "CustomMenuAction.h"
@@ -359,15 +357,15 @@ GraphDisplay::mouseReleaseEvent (QMouseEvent *event)
           break;
       }
       if (!infoSrc.m_name.compare (infoDst.m_name)) {
-        qDebug () << "infoSrc == infoDst. No need to connect anything.";
+        LOG_INFO("infoSrc == infoDst. No need to connect anything");
         goto exit;
 
       }
 
       assert(srcPad != NULL && dstPad != NULL);
 
-      qDebug () << "Connection from " << infoSrc.m_name.c_str () << ":"
-      << srcPad << " to " << infoDst.m_name.c_str () << ":" << dstPad;
+      LOG_INFO("Connection from " + QString(infoSrc.m_name.c_str ()) + ":"
+      + srcPad + " to " + QString(infoDst.m_name.c_str ()) + ":" + dstPad);
 
       if (!m_pGraph->Connect (infoSrc.m_name.c_str (), srcPad,
                               infoDst.m_name.c_str (), dstPad)) {
@@ -385,7 +383,7 @@ GraphDisplay::mouseReleaseEvent (QMouseEvent *event)
       updateDisplayInfoIds ();
       if (g_str_has_prefix (infoDst.m_name.c_str (), "decodebin")) {
         m_pGraph->Play ();
-        qDebug () << "Launch play to discover the new pad";
+        LOG_INFO("Launch play to discover the new pad");
       }
     }
   }
@@ -681,7 +679,7 @@ GraphDisplay::renderPad (std::size_t elementId, std::size_t padId, bool capsAny)
   PadInfo* pad = getPad (elementId, padId);
 
   if (!element || !pad)
-    qDebug () << "element or pad is unreachable";
+    LOG_INFO("element or pad is unreachable");
 
   PluginsList* pluginList = new PluginsList ();
   GList* plugins_list = pluginList->getSortedByRank ();
@@ -750,8 +748,8 @@ GraphDisplay::disconnect (size_t elementId, size_t padId)
     }
   }
 
-  qDebug () << "Disconnect " << src.c_str () << ":" << srcPad.c_str ()
-  << " <-> " << dst.c_str () << ":" << dstPad.c_str ();
+  LOG_INFO("Disconnect " + QString(src.c_str ()) + ":" + srcPad.c_str()
+  + " <-> " + dst.c_str () + ":" + dstPad.c_str ());
 
   if (src.empty () || dst.empty () || srcPad.empty () || dstPad.empty ())
     return;

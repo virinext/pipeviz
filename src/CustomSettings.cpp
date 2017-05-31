@@ -37,3 +37,22 @@ CustomSettings::mainWindowGeometry ()
   QSettings settings (COMPANY_NAME, APPLICATION_NAME);
   return settings.value ("geometry").toByteArray ();
 }
+
+void
+CustomSettings::saveGstDebugString (const QString &string)
+{
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  settings.setValue ("gst_log_string", string);
+}
+
+QString
+CustomSettings::lastGstDebugString ()
+{
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  QString res = settings.value ("gst_log_string").toString ();
+
+  if (res.isEmpty ())
+    res = "GST_DEBUG=*:5";
+
+  return res;
+}

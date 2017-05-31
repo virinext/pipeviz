@@ -29,7 +29,8 @@ HEADERS += src/PluginsList.h        \
 		src/PipelineIE.h            \
 		src/CustomSettings.h        \
 		src/SeekSlider.h			\
-		src/CustomMenuAction.h
+		src/CustomMenuAction.h		\
+		src/Logger.h
 
 SOURCES += src/main.cpp             \
 		src/PluginsList.cpp         \
@@ -41,4 +42,5 @@ SOURCES += src/main.cpp             \
 		src/PipelineIE.cpp          \
 		src/CustomSettings.cpp      \
 		src/SeekSlider.cpp			\
-		src/CustomMenuAction.cpp
+		src/CustomMenuAction.cpp	\
+		src/Logger.cpp

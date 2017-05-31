@@ -1,6 +1,8 @@
 #ifndef GRAPH_MANAGER_H_
 #define GRAPH_MANAGER_H_
 
+#include "Logger.h"
+
 #include <gst/gst.h>
 
 #include <string>
