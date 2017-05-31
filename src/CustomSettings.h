@@ -4,16 +4,13 @@
 #include <QString>
 #include <QByteArray>
 
-
 namespace CustomSettings
 {
-	void saveLastIODirectory(const QString &name);
-	QString lastIODirectory();
+  void saveLastIODirectory(const QString &name);
+  QString lastIODirectory();
 
-	void saveMainWindowGeometry(const QByteArray &geometry);
-	QByteArray mainWindowGeometry();
+  void saveMainWindowGeometry(const QByteArray &geometry);
+  QByteArray mainWindowGeometry();
 }
-
-
 
 #endif

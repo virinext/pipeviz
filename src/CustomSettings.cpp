@@ -11,7 +11,6 @@ void CustomSettings::saveLastIODirectory(const QString &name)
 	settings.setValue("last_directory", name);
 }
 
-
 QString CustomSettings::lastIODirectory()
 {
 	QSettings settings(COMPANY_NAME, APPLICATION_NAME);
@@ -23,13 +22,11 @@ QString CustomSettings::lastIODirectory()
 	return res;
 }
 
-
 void CustomSettings::saveMainWindowGeometry(const QByteArray &geometry)
 {
 	QSettings settings(COMPANY_NAME, APPLICATION_NAME);
 	settings.setValue("geometry", geometry);
 }
-
 
 QByteArray CustomSettings::mainWindowGeometry()
 {

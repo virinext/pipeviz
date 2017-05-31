@@ -19,41 +19,40 @@ class PluginsListDialog;
 
 class MainWindow: public QMainWindow
 {
-	Q_OBJECT
-	public:
-		MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-		~MainWindow();
+  Q_OBJECT
+public:
+  MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+  ~MainWindow();
 
-	protected:
-		void timerEvent(QTimerEvent *);
+protected:
+  void timerEvent(QTimerEvent *);
 
-	private slots:
-		void AddPlugin();
-		void OpenMediaFile();
-		void OpenMediaUri();
-		void Play();
-		void Pause();
-		void Stop();
-		void Flush();
-		void Seek(int);
+private slots:
+  void AddPlugin();
+  void OpenMediaFile();
+  void OpenMediaUri();
+  void Play();
+  void Pause();
+  void Stop();
+  void Flush();
+  void Seek(int);
 
-		void Save();
-		void SaveAs();
-		void Open();
+  void Save();
+  void SaveAs();
+  void Open();
 
-		void ClearGraph();
-		void About();
+  void ClearGraph();
+  void About();
 
-	private:
-		QSharedPointer<GraphManager>     m_pGraph;
-		GraphDisplay                    *m_pGraphDisplay;
+private:
+  QSharedPointer<GraphManager> m_pGraph;
+  GraphDisplay *m_pGraphDisplay;
 
-		QStatusBar                      *m_pstatusBar;
-		QSlider                         *m_pslider;
+  QStatusBar *m_pstatusBar;
+  QSlider *m_pslider;
 
-		QString                          m_fileName;
-		PluginsListDialog               *m_pluginListDlg;
+  QString m_fileName;
+  PluginsListDialog *m_pluginListDlg;
 };
-
 
 #endif

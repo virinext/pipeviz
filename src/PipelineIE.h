@@ -8,9 +8,9 @@
 
 namespace PipelineIE
 {
-	bool Export(QSharedPointer<GraphManager> pgraph, const QString &fileName);
-	bool Import(QSharedPointer<GraphManager> pgraph, const QString &fileName);
-	bool Clear(QSharedPointer<GraphManager> pgraph);
+  bool Export(QSharedPointer<GraphManager> pgraph, const QString &fileName);
+  bool Import(QSharedPointer<GraphManager> pgraph, const QString &fileName);
+  bool Clear(QSharedPointer<GraphManager> pgraph);
 };
 
 #endif
