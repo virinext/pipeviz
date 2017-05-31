@@ -5,34 +5,35 @@
 #define COMPANY_NAME              "virinext"
 #define APPLICATION_NAME          "pipeviz"
 
-void CustomSettings::saveLastIODirectory(const QString &name)
+void
+CustomSettings::saveLastIODirectory (const QString &name)
 {
-	QSettings settings(COMPANY_NAME, APPLICATION_NAME);
-	settings.setValue("last_directory", name);
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  settings.setValue ("last_directory", name);
 }
 
-
-QString CustomSettings::lastIODirectory()
+QString
+CustomSettings::lastIODirectory ()
 {
-	QSettings settings(COMPANY_NAME, APPLICATION_NAME);
-	QString res = settings.value("last_directory").toString();
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  QString res = settings.value ("last_directory").toString ();
 
-	if(res.isEmpty())
-		res = "./";
+  if (res.isEmpty ())
+    res = "./";
 
-	return res;
+  return res;
 }
 
-
-void CustomSettings::saveMainWindowGeometry(const QByteArray &geometry)
+void
+CustomSettings::saveMainWindowGeometry (const QByteArray &geometry)
 {
-	QSettings settings(COMPANY_NAME, APPLICATION_NAME);
-	settings.setValue("geometry", geometry);
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  settings.setValue ("geometry", geometry);
 }
 
-
-QByteArray CustomSettings::mainWindowGeometry()
+QByteArray
+CustomSettings::mainWindowGeometry ()
 {
-	QSettings settings(COMPANY_NAME, APPLICATION_NAME);
-	return settings.value("geometry").toByteArray();
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  return settings.value ("geometry").toByteArray ();
 }

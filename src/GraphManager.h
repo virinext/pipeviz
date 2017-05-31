@@ -81,6 +81,7 @@ struct ElementInfo
 
 class GraphManager
 {
+
 public:
 	GraphManager();
 	~GraphManager();
@@ -111,8 +112,6 @@ public:
 
 	GstElement       *m_pGraph;
 	PluginsList       *m_pluginsList;
-
 };
-
 
 #endif
