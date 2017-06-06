@@ -27,7 +27,7 @@ void
 ElementProperties::addParamEnum (GParamSpec *param, GstElement *element,
                                  QGridLayout *play)
 {
-  GValue value = { 0 };
+  GValue value = G_VALUE_INIT;
 
   g_value_init (&value, param->value_type);
   if (param->flags & G_PARAM_READABLE)
@@ -69,7 +69,7 @@ void
 ElementProperties::addParamFlags (GParamSpec *param, GstElement *element,
                                   QGridLayout *play)
 {
-  GValue value = { 0 };
+  GValue value = G_VALUE_INIT;
 
   g_value_init (&value, param->value_type);
   if (param->flags & G_PARAM_READABLE)
@@ -80,7 +80,7 @@ ElementProperties::addParamFlags (GParamSpec *param, GstElement *element,
   }
 
   QString propertyName = g_param_spec_get_name (param);
-  int propertyValue;
+  size_t propertyValue;
 
   propertyValue = g_value_get_flags (&value);
 
@@ -119,7 +119,7 @@ ElementProperties::addParamSimple (GParamSpec *param, GstElement *element,
   if (param->flags & G_PARAM_WRITABLE)
     readOnly = false;
 
-  GValue value = { 0 };
+  GValue value = G_VALUE_INIT;
 
   g_value_init (&value, param->value_type);
   if (param->flags & G_PARAM_READABLE)
@@ -178,7 +178,7 @@ ElementProperties::addParamSimple (GParamSpec *param, GstElement *element,
       break;
     }
     case G_TYPE_CHAR: {
-      propertyValue = QString::number (g_value_get_char (&value));
+      propertyValue = QString::number (g_value_get_schar (&value));
       break;
     }
     case G_TYPE_UCHAR: {

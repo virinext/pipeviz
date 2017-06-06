@@ -21,8 +21,7 @@ clearPipeline (GstElement *pipeline)
   bool done = false;
   while (!done) {
 #if GST_VERSION_MAJOR >= 1
-    GValue value =
-    { 0};
+    GValue value = G_VALUE_INIT;
     switch (gst_iterator_next (iter, &value))
     {
       case GST_ITERATOR_OK:
@@ -84,7 +83,7 @@ writeProperties (QXmlStreamWriter &xmlWriter, const GstElement *element)
 
     if ((param->flags & G_PARAM_READABLE)
     && (param->flags & G_PARAM_WRITABLE)) {
-      GValue value = { 0 };
+      GValue value = G_VALUE_INIT;
       g_value_init (&value, param->value_type);
 
       g_object_get_property (G_OBJECT (element), param->name, &value);
