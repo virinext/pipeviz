@@ -172,6 +172,7 @@ PluginsListDialog::~PluginsListDialog ()
 void
 PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
 {
+  Q_UNUSED(previous);
   qDebug () << "Show Info: " << pitem->text ();
   m_plblInfo->clear ();
   QString descr;
@@ -278,8 +279,8 @@ PluginsListDialog::eventFilter (QObject *obj, QEvent *event)
   if (event->type () == QEvent::KeyPress) {
     QKeyEvent *key = static_cast<QKeyEvent*> (event);
 
-    if ((key->key () == Qt::Key_Enter)
-    || (key->key () == Qt::Key_Return) && m_pPlugins->currentItem ()) {
+    if (((key->key () == Qt::Key_Enter)
+    || (key->key () == Qt::Key_Return)) && m_pPlugins->currentItem ()) {
       insert (m_pPlugins->currentItem ());
       return true;
     }
@@ -291,7 +292,7 @@ PluginsListDialog::eventFilter (QObject *obj, QEvent *event)
 void
 PluginsListDialog::filterPlagins (const QString &text)
 {
-  for (std::size_t i = 0; i < m_pPlugins->count (); i++) {
+  for (int i = 0; i < m_pPlugins->count (); i++) {
     QListWidgetItem *pitem = m_pPlugins->item (i);
 
     if (pitem->text ().contains (text))

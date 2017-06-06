@@ -119,6 +119,7 @@ GraphDisplay::update (const std::vector<ElementInfo> &info)
 void
 GraphDisplay::paintEvent (QPaintEvent *event)
 {
+  Q_UNUSED(event);
   QPainter painter (this);
   QPen defaultPen = painter.pen ();
   for (std::size_t i = 0; i < m_displayInfo.size (); i++) {
@@ -848,6 +849,7 @@ GraphDisplay::requestPad (std::size_t elementId)
 void
 GraphDisplay::addRequestPad (int row, int collumn)
 {
+  Q_UNUSED(collumn);
   QTableWidget *ptwgt = dynamic_cast<QTableWidget *> (QObject::sender ());
 
   qulonglong v = ptwgt->property ("element").toULongLong ();

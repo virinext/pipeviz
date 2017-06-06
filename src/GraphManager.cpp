@@ -16,7 +16,7 @@ get_str_caps_limited (gchar* str)
   gchar* result;
   if (strlen (str) > MAX_STR_CAPS_SIZE) {
     result = g_strndup (str, MAX_STR_CAPS_SIZE);
-    for (int i = strlen (result) - 1; i > strlen (result) - 4; i--)
+    for (size_t i = strlen (result) - 1; i > strlen (result) - 4; i--)
       result[i] = '.';
   }
   else
@@ -28,6 +28,7 @@ static void
 typefind_have_type_callback (GstElement * typefind, guint probability,
                              GstCaps * caps, GraphManager * thiz)
 {
+  Q_UNUSED(typefind);
   gchar *caps_description = gst_caps_to_string (caps);
   qDebug () << "Found caps " << caps_description << " with probability "
     << probability;
@@ -226,7 +227,7 @@ GraphManager::Connect (const char *srcElement, const char *srcPad,
 
   gboolean seekRes = gst_element_seek_simple (m_pGraph, GST_FORMAT_TIME,
                                               GST_SEEK_FLAG_FLUSH, 0);
-
+  Q_UNUSED(seekRes);
   gst_object_unref (src);
   gst_object_unref (dst);
 
@@ -236,6 +237,7 @@ GraphManager::Connect (const char *srcElement, const char *srcPad,
 bool
 GraphManager::Connect (const char *srcElement, const char *dstElement)
 {
+
   GstElement *src = gst_bin_get_by_name (GST_BIN (m_pGraph), srcElement);
   GstElement *dst = gst_bin_get_by_name (GST_BIN (m_pGraph), dstElement);
 
@@ -243,7 +245,7 @@ GraphManager::Connect (const char *srcElement, const char *dstElement)
 
   gboolean seekRes = gst_element_seek_simple (m_pGraph, GST_FORMAT_TIME,
                                               GST_SEEK_FLAG_FLUSH, 0);
-
+  Q_UNUSED(seekRes);
   /* add a callback to handle have-type signal */
   if (g_str_has_prefix (dstElement, "typefindelement")) {
     g_signal_connect (dst, "have-type",
@@ -284,8 +286,7 @@ GraphManager::GetInfo ()
   size_t id = 0;
   while (!done) {
 #if GST_VERSION_MAJOR >= 1
-    GValue value =
-    { 0};
+    GValue value = G_VALUE_INIT;
     switch (gst_iterator_next (iter, &value))
     {
       case GST_ITERATOR_OK:
@@ -314,8 +315,7 @@ GraphManager::GetInfo ()
         GstPad *pad;
         while (!padDone) {
 #if GST_VERSION_MAJOR >= 1
-          GValue padVal =
-          { 0};
+          GValue padVal = G_VALUE_INIT;
           switch (gst_iterator_next (padItr, &padVal))
           {
             case GST_ITERATOR_OK:
