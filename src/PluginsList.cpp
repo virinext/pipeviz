@@ -12,14 +12,12 @@
 
 #include <gst/gst.h>
 
-#include <QDebug>
-
 static gint
 plugins_sort_cb (gconstpointer a, gconstpointer b)
 {
   Plugin* p1 = (Plugin*) a;
   Plugin* p2 = (Plugin*) b;
-  qDebug () << "Sort p1: " << p1->getName () << " and  p2: " << p2->getName ();
+  LOG_INFO("Sort p1: " + p1->getName () + " and  p2: " + p2->getName ());
   if (p1->getRank () > p2->getRank ())
     return 1;
   else if (p1->getRank () == p2->getRank ()) {
@@ -173,7 +171,7 @@ void
 PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
 {
   Q_UNUSED(previous);
-  qDebug () << "Show Info: " << pitem->text ();
+  LOG_INFO("Show Info: " + pitem->text ());
   m_plblInfo->clear ();
   QString descr;
   descr += "<b>Plugin details</b><hr>";
@@ -181,14 +179,14 @@ PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
   GstElementFactory *factory = gst_element_factory_find (
   pitem->text ().toStdString ().c_str ());
   if (!factory) {
-    qDebug () << "warning: " << pitem->text () << " Not Found";
+    LOG_INFO("warning: " + pitem->text () + " Not Found");
     return;
   }
 
   factory = GST_ELEMENT_FACTORY (
   gst_plugin_feature_load (GST_PLUGIN_FEATURE (factory)));
   if (!factory) {
-    qDebug () << "warning: " << pitem->text () << " Not Found";
+    LOG_INFO("warning: " + pitem->text () + " Not Found");
     return;
   }
 #if GST_VERSION_MAJOR >= 1
@@ -201,7 +199,7 @@ PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
   GstPlugin* plugin = gst_default_registry_find_plugin (plugin_name);
 #endif
   if (!plugin) {
-    qDebug () << "warning: " << pitem->text () << " Not Found";
+    LOG_INFO("warning: " + pitem->text () + " Not Found");
     return;
   }
 
@@ -258,17 +256,17 @@ void
 PluginsListDialog::insert (QListWidgetItem *pitem)
 {
   if (!pitem) {
-    qDebug () << "Do not insert null item";
+    LOG_INFO("Do not insert null item");
     return;
   }
-  qDebug () << "Insert: " << pitem->text ();
+  LOG_INFO("Insert: " + pitem->text ());
 
   if (!m_pGraph
   || !m_pGraph->AddPlugin (pitem->text ().toStdString ().c_str (), NULL)) {
     QMessageBox::warning (
     this, "Plugin addition problem",
     "Plugin `" + pitem->text () + "` insertion was FAILED");
-    qDebug () << "Plugin `" << pitem->text () << "` insertion FAILED";
+    LOG_INFO("Plugin `" +  pitem->text () + "` insertion FAILED");
     return;
   }
 }

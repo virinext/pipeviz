@@ -1,13 +1,16 @@
 #include "GraphManager.h"
 #include "PluginsList.h"
-#include <QDebug>
 
+#include "MainWindow.h"
 #include <QString>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QFileInfo>
 
 #include "CustomSettings.h"
+
+GST_DEBUG_CATEGORY_STATIC(pipeviz_debug);
+#define GST_CAT_DEFAULT pipeviz_debug
 
 #define MAX_STR_CAPS_SIZE 150
 gchar*
@@ -30,8 +33,7 @@ typefind_have_type_callback (GstElement * typefind, guint probability,
 {
   Q_UNUSED(typefind);
   gchar *caps_description = gst_caps_to_string (caps);
-  qDebug () << "Found caps " << caps_description << " with probability "
-    << probability;
+  GST_DEBUG_OBJECT(thiz, "Found caps %s with probability %d",caps_description, probability);
   g_free (caps_description);
   thiz->Pause ();
 }
@@ -39,7 +41,10 @@ typefind_have_type_callback (GstElement * typefind, guint probability,
 GraphManager::GraphManager ()
 {
   m_pGraph = gst_pipeline_new ("pipeline");
+  GST_DEBUG_CATEGORY_INIT(pipeviz_debug, "pipeviz", 0, "Pipeline vizualizer");
+
   m_pluginsList = new PluginsList ();
+  GST_WARNING("init");
 }
 
 GraphManager::~GraphManager ()
@@ -145,7 +150,7 @@ GraphManager::AddPlugin (const char *plugin, const char *name)
         gchar *uri = gst_filename_to_uri (path.toStdString ().c_str (),
         NULL);
         if (uri) {
-          qDebug () << "Set uri: " << uri;
+          GST_DEBUG("Set uri: %s", uri);
 #if GST_VERSION_MAJOR >= 1
           gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri, NULL);
 #else
@@ -162,7 +167,7 @@ GraphManager::AddPlugin (const char *plugin, const char *name)
       QString uri = QInputDialog::getText (NULL, "Uri...", "Uri:");
 
       if (!uri.isEmpty ()) {
-        qDebug () << "Set uri: " << uri;
+        GST_DEBUG("Set uri: %s", uri.toStdString ().c_str ());
 #if GST_VERSION_MAJOR >= 1
         gst_uri_handler_set_uri(GST_URI_HANDLER(pel), uri.toStdString().c_str(), NULL);
 #else
@@ -430,7 +435,7 @@ GraphManager::Play ()
 
   if (res != GST_STATE_CHANGE_SUCCESS) {
     gst_element_abort_state (m_pGraph);
-    qDebug () << "state changing to Play was FAILED";
+    GST_WARNING("state changing to Play was FAILED");
   }
 
   return state == GST_STATE_PLAYING;
@@ -446,7 +451,7 @@ GraphManager::Pause ()
   res = gst_element_get_state (m_pGraph, &state, NULL, GST_SECOND);
   if (res != GST_STATE_CHANGE_SUCCESS) {
     gst_element_abort_state (m_pGraph);
-    qDebug () << "state changing to Pause was FAILED";
+    GST_WARNING("state changing to Pause was FAILED");
   }
 
   return state == GST_STATE_PAUSED;
@@ -539,60 +544,58 @@ GraphManager::CanConnect (const char *srcName, const char *srcPadName,
 
   src = gst_bin_get_by_name (GST_BIN (m_pGraph), srcName);
   if (!src) {
-    qDebug () << "Unable to get the src element: " << srcName;
+    GST_DEBUG("Unable to get the src element: %s",srcName);
     goto done;
   }
 
   srcPad = gst_element_get_static_pad (src, srcPadName);
   if (!srcPad) {
-    qDebug () << "Unable to get the src pad";
+    GST_DEBUG("Unable to get the src pad: %s",srcPadName);
     goto done;
   }
 
   srcCaps = gst_pad_get_current_caps (srcPad);
   if (!srcCaps) {
-    qDebug () << "Unable to get the current caps for pad:" << srcPadName;
+    GST_DEBUG("Unable to get the current caps for pad: %s",srcPadName);
     srcCaps = gst_pad_get_pad_template_caps (srcPad);
     if (!srcCaps) {
-      qDebug () << "Unable to get the template caps for pad:" << srcPadName;
+      GST_DEBUG("Unable to get the template caps for pad: %s",srcPadName);
       goto done;
     }
   }
 
   dest = gst_element_factory_make (destName, NULL);
   if (!dest) {
-    qDebug () << "Unable to get the dest element: " << destName;
+    GST_DEBUG("Unable to get the dest element: %s",destName);
     goto done;
   }
 
   destFactory = gst_element_get_factory (dest);
   if (!destFactory) {
-    qDebug () << "Unable to get the dest factory";
+    GST_DEBUG("Unable to get the factory for dest element %s",destName);
     goto done;
   }
   if (noANY && gst_element_factory_can_sink_any_caps (destFactory, srcCaps)) {
-    qDebug () << "The dest element " << destName << " can sink any caps";
+    GST_DEBUG("The dest element %s can sink any caps",destName);
     goto done;
   }
 
   if (!gst_element_factory_can_sink_all_caps (destFactory, srcCaps)) {
     gchar* caps_string = gst_caps_to_string (srcCaps);
-    qDebug () << "The dest element " << destName << " can not sink this caps: "
-    << caps_string;
+    GST_DEBUG("The dest element %s can not sink this caps %s",destName, caps_string);
     g_free (caps_string);
     goto done;
   }
 
   added = gst_bin_add (GST_BIN (m_pGraph), dest);
   if (!added) {
-    qDebug () << "Unable to add element to the bin";
+    GST_DEBUG("Unable to add element %s to the bin", destName);
     goto done;
   }
 
   ret = gst_element_link (src, dest);
   if (ret) {
-    qDebug () << "Can link elements src " << GST_OBJECT_NAME (src)
-    << " with dest " << GST_OBJECT_NAME (dest);
+    GST_INFO("Can link elements src %s  with dest %s", GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
     gst_element_unlink (src, dest);
   }
 

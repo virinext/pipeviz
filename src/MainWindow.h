@@ -7,15 +7,18 @@
 #include <QStatusBar>
 #include <QAction>
 #include <QSlider>
+#include <QListWidget>
 
 #include <gst/gstbuffer.h>
 #include <gst/gstevent.h>
 #include <gst/gstcaps.h>
 
 #include "GraphManager.h"
+#include "Logger.h"
 
 class GraphDisplay;
 class PluginsListDialog;
+
 
 class MainWindow: public QMainWindow
 {
@@ -24,8 +27,14 @@ public:
   MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
   ~MainWindow();
 
+  static MainWindow& instance();
+
 protected:
   void timerEvent(QTimerEvent *);
+  void createDockWindows();
+
+public slots:
+    void InsertLogLine(const QString& line, int category);
 
 private slots:
   void AddPlugin();
@@ -46,6 +55,7 @@ private slots:
 
 private:
   QSharedPointer<GraphManager> m_pGraph;
+
   GraphDisplay *m_pGraphDisplay;
 
   QStatusBar *m_pstatusBar;
@@ -53,6 +63,8 @@ private:
 
   QString m_fileName;
   PluginsListDialog *m_pluginListDlg;
+  QMenu *m_menu;
+  QListWidget* m_logList;
 };
 
 #endif

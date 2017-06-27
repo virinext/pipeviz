@@ -7,7 +7,6 @@
 
 #include <vector>
 
-#include <QDebug>
 
 static void
 clearPipeline (GstElement *pipeline)
@@ -142,9 +141,8 @@ writeProperties (QXmlStreamWriter &xmlWriter, const GstElement *element)
           }
           default: {
             gchar *elementName = gst_element_get_name (element);
-
-            qDebug () << "property `" << propertyName << "` for `"
-            << elementName << "` not supported";
+            LOG_INFO(QString("property `" + propertyName + "` for `"
+            + elementName + "` not supported"));
             g_free (elementName);
 
             skip = true;
@@ -183,8 +181,8 @@ loadProperties (QDomElement node, GstElement *element)
 
       if (!param) {
         gchar *elementName = gst_element_get_name (element);
-        qDebug () << "problem with setting property `" << name << "` for `"
-        << elementName << "`";
+        LOG_INFO(QString("problem with setting property `" + name + "` for `"
+        + elementName + "`"));
         g_free (elementName);
         continue;
       }
@@ -247,8 +245,8 @@ loadProperties (QDomElement node, GstElement *element)
         }
         default: {
           gchar *elementName = gst_element_get_name (element);
-          qDebug () << "property `" << name << "` for `"
-          << QString (elementName) << "` not supported";
+          LOG_INFO(QString("property `" + name + "` for `"
+          + QString (elementName) + "` not supported"));
           g_free (elementName);
           break;
         }
@@ -330,8 +328,7 @@ PipelineIE::Export (QSharedPointer<GraphManager> pgraph,
                                   GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
       }
       else {
-        qDebug () << "Unable to find a template for"
-        << info[i].m_pads[j].m_name.c_str ();
+        LOG_INFO(QString("Unable to find a template for") + QString(info[i].m_pads[j].m_name.c_str()));
         xmlWriter.writeAttribute ("presence", "always");
         xmlWriter.writeAttribute ("template-name", "");
       }

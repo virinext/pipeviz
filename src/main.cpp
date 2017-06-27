@@ -6,6 +6,7 @@
 int
 main (int argc, char **argv)
 {
+  Logger::instance().configure_logger ();
   gst_init (&argc, &argv);
 
   GstRegistry *registry;

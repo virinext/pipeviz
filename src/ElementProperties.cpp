@@ -1,6 +1,5 @@
 #include "ElementProperties.h"
 
-#include <QDebug>
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QString>
@@ -188,7 +187,7 @@ ElementProperties::addParamSimple (GParamSpec *param, GstElement *element,
 
     default: {
       skip = true;
-      qDebug () << "property " << propertyName << " not supported";
+      LOG_INFO("property " + propertyName + " not supported");
       break;
     }
   };
@@ -283,7 +282,7 @@ ElementProperties::applyClicked ()
     G_OBJECT_GET_CLASS (element), itr.key ().toStdString ().c_str ());
 
     if (!param) {
-      qDebug () << "problem with setting " << itr.key () << " property";
+      LOG_INFO("problem with setting " + itr.key () + " property");
       continue;
     }
 
@@ -373,7 +372,7 @@ ElementProperties::applyClicked ()
           break;
         }
         default: {
-          qDebug () << "property " << itr.key () << " not supported";
+          LOG_INFO("property " + itr.key () + " not supported");
           break;
         }
       };

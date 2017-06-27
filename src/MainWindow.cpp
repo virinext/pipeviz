@@ -8,7 +8,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QScopedArrayPointer>
-#include <QDebug>
 #include <QScrollArea>
 #include <QLabel>
 #include <QScrollArea>
@@ -21,12 +20,11 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QSettings>
+#include <QDockWidget>
 
-#include <QDebug>
-
+#include "CustomSettings.h"
 #include "GraphDisplay.h"
 #include "PipelineIE.h"
-#include "CustomSettings.h"
 #include "SeekSlider.h"
 
 #include "version_info.h"
@@ -117,46 +115,46 @@ m_pGraph (new GraphManager)
   connect(m_pslider, SIGNAL(valueChanged(int)), SLOT(Seek(int)));
   ptb->addWidget (m_pslider);
 
-  QMenu *pmenu = menuBar ()->addMenu ("&File");
+  m_menu = menuBar ()->addMenu ("&File");
 
-  QAction *pactOpen = pmenu->addAction ("Open...", this, SLOT (Open ()),
+  QAction *pactOpen = m_menu->addAction ("Open...", this, SLOT (Open ()),
                                         QKeySequence::Open);
   addAction (pactOpen);
 
-  QAction *pactOpenMediaFile = pmenu->addAction ("Open Media File...", this,
+  QAction *pactOpenMediaFile = m_menu->addAction ("Open Media File...", this,
                                                  SLOT (OpenMediaFile ()),
                                                  QKeySequence::Open);
   addAction (pactOpenMediaFile);
 
-  QAction *pactSave = pmenu->addAction ("Save", this, SLOT (Save ()),
+  QAction *pactSave = m_menu->addAction ("Save", this, SLOT (Save ()),
                                         QKeySequence::Save);
   addAction (pactSave);
 
-  QAction *pactSaveAs = pmenu->addAction ("Save As...", this, SLOT (SaveAs ()),
+  QAction *pactSaveAs = m_menu->addAction ("Save As...", this, SLOT (SaveAs ()),
                                           QKeySequence::SaveAs);
   addAction (pactSaveAs);
 
-  pmenu->addSeparator ();
-  pmenu->addAction ("Exit", this, SLOT (close ()));
+  m_menu->addSeparator ();
+  m_menu->addAction ("Exit", this, SLOT (close ()));
 
-  pmenu = menuBar ()->addMenu ("&Graph");
+  m_menu = menuBar ()->addMenu ("&Graph");
 
-  pmenu->addAction (pactAdd);
-  pmenu->addAction (pactOpenMediaFile);
-  pmenu->addAction ("Open Media Uri...", this, SLOT (OpenMediaUri ()));
-  pmenu->addSeparator ();
-  pmenu->addAction (pactPlay);
-  pmenu->addAction (pactPause);
-  pmenu->addAction (pactStop);
-  pmenu->addAction (pactFlush);
-  pmenu->addSeparator ();
-  pmenu->addAction (pactClear);
+  m_menu->addAction (pactAdd);
+  m_menu->addAction (pactOpenMediaFile);
+  m_menu->addAction ("Open Media Uri...", this, SLOT (OpenMediaUri ()));
+  m_menu->addSeparator ();
+  m_menu->addAction (pactPlay);
+  m_menu->addAction (pactPause);
+  m_menu->addAction (pactStop);
+  m_menu->addAction (pactFlush);
+  m_menu->addSeparator ();
+  m_menu->addAction (pactClear);
 
-  pmenu = menuBar ()->addMenu ("&Help");
+  m_menu = menuBar ()->addMenu ("&Help");
 
-  pmenu->addAction ("About pipeviz...", this, SLOT (About ()));
+  m_menu->addAction ("About pipeviz...", this, SLOT (About ()));
 
-  m_pGraphDisplay = new GraphDisplay;
+  m_pGraphDisplay = new GraphDisplay(this);
 
   QScrollArea *pscroll = new QScrollArea;
   pscroll->setWidget (m_pGraphDisplay);
@@ -169,12 +167,54 @@ m_pGraph (new GraphManager)
   m_pluginListDlg = new PluginsListDialog (m_pGraph->getPluginsList (), this);
   m_pluginListDlg->setModal (false);
   restoreGeometry (CustomSettings::mainWindowGeometry ());
+  createDockWindows();
+
+  Logger::instance().start();
+  connect(&Logger::instance(), SIGNAL(sendLog(const QString &, int)),
+                  this, SLOT(InsertLogLine(const QString &, int)));
+
+  LOG_INFO("Mainwindow is now initialized");
+
   startTimer (100);
+}
+
+void MainWindow::createDockWindows()
+{
+    QDockWidget *dock = new QDockWidget(tr("logs"), this);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_logList = new QListWidget(dock);
+    dock->setWidget(m_logList);
+    addDockWidget(Qt::BottomDockWidgetArea, dock);
+    m_menu->addAction(dock->toggleViewAction());
+
+}
+
+void MainWindow::InsertLogLine(const QString& line, int category)
+{
+  QListWidgetItem* pItem =new QListWidgetItem(line);
+  switch(category) {
+    case eLOG_CATEGORY_INTERNAL:
+      pItem->setForeground(Qt::blue);
+      break;
+    case eLOG_CATEGORY_GST:
+      pItem->setForeground(Qt::red);
+      break;
+    default:
+      pItem->setForeground(Qt::black);
+  }
+  m_logList->addItem(pItem);
+}
+
+MainWindow& MainWindow::instance()
+{
+  static MainWindow instance;
+  return instance;
 }
 
 MainWindow::~MainWindow ()
 {
   CustomSettings::saveMainWindowGeometry (saveGeometry ());
+  Logger::instance().Quit();
   delete m_pluginListDlg;
 }
 
@@ -182,6 +222,8 @@ void
 MainWindow::AddPlugin ()
 {
   m_pluginListDlg->setGraph (m_pGraph.data ());
+
+  m_pluginListDlg->raise ();
   m_pluginListDlg->show ();
   std::vector<ElementInfo> info = m_pGraph->GetInfo ();
   m_pGraphDisplay->update (info);
@@ -196,7 +238,7 @@ MainWindow::OpenMediaFile ()
   if (!path.isEmpty ()) {
     gchar *uri = gst_filename_to_uri (path.toStdString ().c_str (), NULL);
     if (uri) {
-      qDebug () << "Open Source file: " << path;
+      LOG_INFO("Open Source file: " + path);;
 
       m_pGraph->OpenUri (uri, NULL);
       g_free (uri);
@@ -216,7 +258,7 @@ MainWindow::OpenMediaUri ()
   QString uri = QInputDialog::getText (this, "Open Uri...", "Uri:");
 
   if (!uri.isEmpty ()) {
-    qDebug () << "Open uri: " << uri;
+    LOG_INFO("Open uri: "+ uri);
     m_pGraph->OpenUri (uri.toStdString ().c_str (), NULL);
 
     std::vector<ElementInfo> info = m_pGraph->GetInfo ();
@@ -228,28 +270,28 @@ MainWindow::OpenMediaUri ()
 void
 MainWindow::Play ()
 {
-  qDebug () << "Play";
+  LOG_INFO( "Play");
   m_pGraph->Play ();
 }
 
 void
 MainWindow::Pause ()
 {
-  qDebug () << "Pause";
+  LOG_INFO("Pause");
   m_pGraph->Pause ();
 }
 
 void
 MainWindow::Stop ()
 {
-  qDebug () << "Stop";
+  LOG_INFO("Stop");
   m_pGraph->Stop ();
 }
 
 void
 MainWindow::Flush ()
 {
-  qDebug () << "Flush";
+  LOG_INFO("Flush");
 
   if (m_pGraph->m_pGraph) {
     gst_element_send_event (GST_ELEMENT (m_pGraph->m_pGraph),
@@ -266,7 +308,7 @@ MainWindow::Flush ()
 void
 MainWindow::ClearGraph ()
 {
-  qDebug () << "ClearGraph";
+  LOG_INFO("ClearGraph");
   PipelineIE::Clear (m_pGraph);
 }
 
@@ -274,9 +316,9 @@ void
 MainWindow::Seek (int val)
 {
   if (m_pGraph->SetPosition ((double) (val) / m_pslider->maximum ()))
-    qDebug () << "Seek to" << val;
+    LOG_INFO("Seek to" + val);
   else
-    qDebug () << "Seek to" << val << "was FAILED";
+    LOG_INFO("Seek FAILED");
 }
 
 void
