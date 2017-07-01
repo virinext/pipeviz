@@ -197,8 +197,8 @@ void Logger::run()
     if (line != NULL) {
       processGstLog(line);
       g_free(line);
-    }
-    //usleep(10);
+    } else
+      usleep(10000);
   }
 
   qDebug() << "Logger closed";
