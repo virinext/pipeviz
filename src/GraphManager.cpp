@@ -43,13 +43,11 @@ GraphManager::GraphManager ()
   m_pGraph = gst_pipeline_new ("pipeline");
   GST_DEBUG_CATEGORY_INIT(pipeviz_debug, "pipeviz", 0, "Pipeline vizualizer");
 
-  m_pluginsList = new PluginsList ();
   GST_WARNING("init");
 }
 
 GraphManager::~GraphManager ()
 {
-  delete m_pluginsList;
 }
 
 QString

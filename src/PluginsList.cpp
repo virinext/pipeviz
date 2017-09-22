@@ -1,4 +1,6 @@
 #include "PluginsList.h"
+#include "MainWindow.h"
+#include "FavoritesList.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -6,6 +8,7 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QScrollArea>
+#include <QMenu>
 #include <QMessageBox>
 #include <QEvent>
 #include <QKeyEvent>
@@ -29,8 +32,15 @@ plugins_sort_cb (gconstpointer a, gconstpointer b)
 }
 
 PluginsList::PluginsList ()
+:m_pluginsList(NULL)
 {
   init ();
+}
+
+PluginsList& PluginsList::instance()
+{
+    static PluginsList instance;
+    return instance;
 }
 
 PluginsList::~PluginsList ()
@@ -111,12 +121,17 @@ PluginsList::getPluginListByCaps (GstPadDirection direction, GstCaps* caps)
   return caps_plugins_list;
 }
 
-PluginsListDialog::PluginsListDialog (PluginsList* pluginList, QWidget *pwgt,
+
+#define kBUTTON_FAVORITE_ADD    "Add to favorites"
+#define kBUTTON_FAVORITE_REMOVE "Remove from favorites"
+
+PluginsListDialog::PluginsListDialog (QWidget *pwgt,
                                       Qt::WindowFlags f)
 : QDialog (pwgt, f),
-m_pPluginsList (pluginList),
 m_pGraph (NULL)
 {
+  m_main = (MainWindow*)pwgt;
+
   m_pPlugins = new QListWidget;
   m_pPlugins->setSortingEnabled (true);
   m_plblInfo = new QLabel;
@@ -139,8 +154,13 @@ m_pGraph (NULL)
   QLineEdit *ple = new QLineEdit;
   phblayFind->addWidget (ple);
   phblayFind->addStretch (1);
-
   ple->setPlaceholderText ("Search...");
+
+  m_favoriteListButton = new QPushButton(kBUTTON_FAVORITE_ADD);
+  phblayFind->addWidget (m_favoriteListButton);
+  //phblayFind->addStretch (1);
+  QObject::connect (m_favoriteListButton, SIGNAL (clicked ()), this,
+                    SLOT (favoritesClicked ()));
 
   QVBoxLayout *pvblay = new QVBoxLayout;
   pvblay->addLayout (phblayFind);
@@ -156,25 +176,32 @@ m_pGraph (NULL)
   QObject::connect(m_pPlugins, SIGNAL(itemDoubleClicked (QListWidgetItem *)),
   this, SLOT(insert(QListWidgetItem *)));
 
-  QObject::connect(ple, SIGNAL(textChanged(const QString &)), this, SLOT(filterPlagins(const QString &)));
+  QObject::connect(m_pPlugins,SIGNAL(customContextMenuRequested(const QPoint &)),
+      this,SLOT(ProvideContextMenu(const QPoint &)));
+
+  QObject::connect(ple, SIGNAL(textChanged(const QString &)), this, SLOT(filterPlugins(const QString &)));
 
   installEventFilter (this);
 }
 
 PluginsListDialog::~PluginsListDialog ()
 {
-  if (m_pPluginsList)
-    delete m_pPluginsList;
 }
 
 void
 PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
 {
+
   Q_UNUSED(previous);
   LOG_INFO("Show Info: " + pitem->text ());
   m_plblInfo->clear ();
   QString descr;
   descr += "<b>Plugin details</b><hr>";
+
+  if (m_main->getFavoritesList()->isFavorite( pitem->text ()) != -1)
+    m_favoriteListButton->setText(kBUTTON_FAVORITE_REMOVE);
+  else
+    m_favoriteListButton->setText(kBUTTON_FAVORITE_ADD);
 
   GstElementFactory *factory = gst_element_factory_find (
   pitem->text ().toStdString ().c_str ());
@@ -283,12 +310,11 @@ PluginsListDialog::eventFilter (QObject *obj, QEvent *event)
       return true;
     }
   }
-
   return QDialog::eventFilter (obj, event);
 }
 
 void
-PluginsListDialog::filterPlagins (const QString &text)
+PluginsListDialog::filterPlugins (const QString &text)
 {
   for (int i = 0; i < m_pPlugins->count (); i++) {
     QListWidgetItem *pitem = m_pPlugins->item (i);
@@ -301,12 +327,23 @@ PluginsListDialog::filterPlagins (const QString &text)
 }
 
 void
+PluginsListDialog::favoritesClicked ()
+{
+  QListWidgetItem *pitem = m_pPlugins->currentItem();
+  if(!pitem)
+    return;
+  if (m_main->getFavoritesList()->isFavorite(pitem->text ()) != -1) {
+    emit signalRemPluginToFav (pitem->text ());
+  }
+  else {
+    emit signalAddPluginToFav (pitem->text ());
+  }
+}
+
+void
 PluginsListDialog::InitPluginsList ()
 {
-  if (!m_pPluginsList)
-    m_pPluginsList = new PluginsList ();
-
-  GList* plugins_list = m_pPluginsList->getList ();
+  GList* plugins_list = PluginsList::instance().getList ();
   GList* l;
   std::size_t num = 0;
 
@@ -314,5 +351,35 @@ PluginsListDialog::InitPluginsList ()
     Plugin* plugin = (Plugin*) (l->data);
     m_pPlugins->addItem (plugin->getName ());
     num++;
+  }
+}
+
+void PluginsListDialog::ProvideContextMenu(const QPoint &pos)
+{
+  QPoint item = m_pPlugins->mapToGlobal(pos);
+  QListWidgetItem* current_item = m_pPlugins->currentItem();
+
+  QMenu submenu;
+  if (m_main->getFavoritesList()->isFavorite(current_item->text ()) != -1) {
+      emit signalRemPluginToFav (current_item->text ());
+    }
+    else {
+      emit signalAddPluginToFav (current_item->text ());
+    }
+
+  if (m_main->getFavoritesList()->isFavorite(current_item->text ()) != -1)
+    submenu.addAction("Add to favorites");
+  else
+    submenu.addAction("Remove from favorites");
+
+  QAction* rightClickItem = submenu.exec(item);
+  if (rightClickItem) {
+    if(rightClickItem->text().contains("Add to favorites") ) {
+      LOG_INFO("Delete item: " + current_item->text());
+      emit signalAddPluginToFav (current_item->text ());
+    } else if(rightClickItem->text().contains("Remove from favorites") ) {
+      LOG_INFO("Delete item: " + current_item->text());
+      emit signalRemPluginToFav (current_item->text ());
+    }
   }
 }

@@ -18,7 +18,7 @@
 
 class GraphDisplay;
 class PluginsListDialog;
-
+class FavoritesList;
 
 class MainWindow: public QMainWindow
 {
@@ -28,6 +28,7 @@ public:
   ~MainWindow();
 
   static MainWindow& instance();
+  FavoritesList* getFavoritesList();
 
 protected:
   void timerEvent(QTimerEvent *);
@@ -37,6 +38,8 @@ public slots:
   void InsertLogLine(const QString& line, int category);
   void AddPlugin();
   void ClearGraph();
+  void AddPluginToFavorites(const QString& plugin_name);
+  void RemovePluginToFavorites(const QString& plugin_name);
 
 private slots:
   void OpenMediaFile();
@@ -53,6 +56,10 @@ private slots:
 
   void About();
 
+
+  void onFavoriteListItemDoubleClicked(QListWidgetItem* item);
+  void ProvideContextMenu(const QPoint &pos);
+
 private:
   QSharedPointer<GraphManager> m_pGraph;
 
@@ -65,6 +72,7 @@ private:
   PluginsListDialog *m_pluginListDlg;
   QMenu *m_menu;
   QListWidget* m_logList;
+  FavoritesList* m_favoriteList;
 };
 
 #endif

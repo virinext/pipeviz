@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QListWidgetItem>
+#include <QPushButton>
 
 #include "GraphManager.h"
 
@@ -30,21 +31,26 @@ public:
   PluginsList();
   ~PluginsList();
 
+  static PluginsList& instance();
+
   GList* getList() {return m_pluginsList;}
   GList* getSortedByRank();
   GList* getPluginListByCaps(GstPadDirection direction, GstCaps* caps);
+  GList* getPluginListFavorite();
 
 private:
   void init();
 
-  GList* m_pluginsList;
+  GList* m_pluginsList; //list of plugins
 };
+
+class MainWindow;
 
 class PluginsListDialog: public QDialog
 {
   Q_OBJECT
 public:
-  PluginsListDialog(PluginsList* pluginList, QWidget *pwgt = NULL, Qt::WindowFlags f = Qt::Window);
+  PluginsListDialog(QWidget *pwgt = NULL, Qt::WindowFlags f = Qt::Window);
   ~PluginsListDialog();
 
   void setGraph(GraphManager* graph) {m_pGraph = graph;}
@@ -60,13 +66,20 @@ public slots:
   void insert(QListWidgetItem *);
 
 private slots:
-  void filterPlagins(const QString &text);
+  void filterPlugins(const QString &text);
+  void favoritesClicked();
+  void ProvideContextMenu(const QPoint &pos);
+
+signals:
+  void signalAddPluginToFav (const QString &plugin_name);
+  void signalRemPluginToFav (const QString &plugin_name);
 
 private:
+  MainWindow * m_main;
   QLabel *m_plblInfo;
   QListWidget *m_pPlugins;
-  PluginsList *m_pPluginsList;
   GraphManager *m_pGraph;
+  QPushButton*m_favoriteListButton;
 };
 
 #endif
