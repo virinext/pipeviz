@@ -155,6 +155,10 @@ m_pGraph (new GraphManager)
   m_menu->addAction ("About pipeviz...", this, SLOT (About ()));
 
   m_pGraphDisplay = new GraphDisplay(this);
+  connect(m_pGraphDisplay, SIGNAL(signalAddPlugin()),
+                    this, SLOT(AddPlugin()));
+  connect(m_pGraphDisplay, SIGNAL(signalClearGraph()),
+                    this, SLOT(ClearGraph()));
 
   QScrollArea *pscroll = new QScrollArea;
   pscroll->setWidget (m_pGraphDisplay);
@@ -238,7 +242,7 @@ MainWindow::OpenMediaFile ()
   if (!path.isEmpty ()) {
     gchar *uri = gst_filename_to_uri (path.toStdString ().c_str (), NULL);
     if (uri) {
-      LOG_INFO("Open Source file: " + path);;
+      LOG_INFO("Open Source file: " + path);
 
       m_pGraph->OpenUri (uri, NULL);
       g_free (uri);

@@ -29,6 +29,10 @@ public:
 private slots:
   void addRequestPad(int row, int collumn);
 
+signals:
+  void signalAddPlugin();
+  void signalClearGraph();
+
 private:
 
   enum MoveAction
@@ -74,6 +78,8 @@ private:
   void disconnect(std::size_t elementId, std::size_t padId);
   void requestPad(std::size_t elementId);
   void connectPlugin(std::size_t elementId, const QString& destElementName);
+  void addPlugin();
+  void clearGraph();
 
   ElementInfo* getElement(std::size_t elementId);
   PadInfo* getPad(std::size_t elementId, std::size_t padId);

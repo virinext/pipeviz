@@ -34,10 +34,11 @@ protected:
   void createDockWindows();
 
 public slots:
-    void InsertLogLine(const QString& line, int category);
+  void InsertLogLine(const QString& line, int category);
+  void AddPlugin();
+  void ClearGraph();
 
 private slots:
-  void AddPlugin();
   void OpenMediaFile();
   void OpenMediaUri();
   void Play();
@@ -50,7 +51,6 @@ private slots:
   void SaveAs();
   void Open();
 
-  void ClearGraph();
   void About();
 
 private:

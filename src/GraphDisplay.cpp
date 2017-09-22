@@ -516,8 +516,7 @@ GraphDisplay::showContextMenu (QMouseEvent *event)
     if (isActive)
       pact->setDisabled (true);
 
-    pact = new CustomMenuAction ("Request pad...", &menu);
-    menu.addAction (pact);
+    menu.addAction (new CustomMenuAction ("Request pad...", &menu));
   }
   else {
     for (std::size_t i = 0; i < m_info.size (); i++) {
@@ -565,6 +564,10 @@ GraphDisplay::showContextMenu (QMouseEvent *event)
       if (!menu.isEmpty ())
         break;
     }
+    if (menu.isEmpty ()) {
+      menu.addAction (new CustomMenuAction ("Add plugin", &menu));
+      menu.addAction (new CustomMenuAction ("Clear graph", &menu));
+    }
   }
 
   if (!menu.isEmpty ()) {
@@ -589,6 +592,10 @@ GraphDisplay::showContextMenu (QMouseEvent *event)
         removeSelected ();
       else if (pact->getName () == "ElementName")
         connectPlugin (elementId, pact->text ());
+      else if (pact->getName () == "Add plugin")
+        addPlugin ();
+      else if (pact->getName () == "Clear graph")
+        clearGraph ();
     }
   }
 }
@@ -617,6 +624,18 @@ GraphDisplay::removeSelected ()
     else
       break;
   }
+}
+
+void
+GraphDisplay::addPlugin ()
+{
+ emit signalAddPlugin();
+}
+
+void
+GraphDisplay::clearGraph ()
+{
+ emit signalClearGraph();
 }
 
 void
