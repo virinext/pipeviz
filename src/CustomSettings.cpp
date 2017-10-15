@@ -25,6 +25,22 @@ CustomSettings::lastIODirectory ()
 }
 
 void
+CustomSettings::saveFavoriteList (const QStringList &favorite_list)
+{
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  settings.setValue("favorite_list", QVariant::fromValue(favorite_list));
+}
+
+QStringList
+CustomSettings::loadFavoriteList ()
+{
+  QSettings settings (COMPANY_NAME, APPLICATION_NAME);
+  QStringList data = settings.value("favorite_list").value<QStringList>();
+
+  return data;
+}
+
+void
 CustomSettings::saveMainWindowGeometry (const QByteArray &geometry)
 {
   QSettings settings (COMPANY_NAME, APPLICATION_NAME);

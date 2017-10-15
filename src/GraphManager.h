@@ -102,7 +102,6 @@ public:
 	double GetPosition();
 	bool SetPosition(double);
 
-	PluginsList* getPluginsList() { return m_pluginsList;}
 	bool CanConnect(const char *srcName,const char *srcPadName, const char *destName, bool noANY = true);
 
 
@@ -113,7 +112,6 @@ public:
 	QString getPadCaps(ElementInfo* elementInfo, PadInfo* padInfo, ePadCapsSubset subset, bool afTruncated = false);
 
 	GstElement       *m_pGraph;
-	PluginsList       *m_pluginsList;
 };
 
 #endif

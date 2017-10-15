@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "PluginsList.h"
+#include "FavoritesList.h"
 
 #include <QToolBar>
 #include <QAction>
@@ -168,8 +169,15 @@ m_pGraph (new GraphManager)
   setCentralWidget (pscroll);
   m_pstatusBar = new QStatusBar;
   setStatusBar (m_pstatusBar);
-  m_pluginListDlg = new PluginsListDialog (m_pGraph->getPluginsList (), this);
+  m_pluginListDlg = new PluginsListDialog (this);
   m_pluginListDlg->setModal (false);
+
+  connect(m_pluginListDlg, SIGNAL(signalAddPluginToFav(const QString&)),
+                    this, SLOT(AddPluginToFavorites(const QString&)));
+  connect(m_pluginListDlg, SIGNAL(signalRemPluginToFav(const QString&)),
+                    this, SLOT(RemovePluginToFavorites(const QString&)));
+
+
   restoreGeometry (CustomSettings::mainWindowGeometry ());
   createDockWindows();
 
@@ -184,6 +192,7 @@ m_pGraph (new GraphManager)
 
 void MainWindow::createDockWindows()
 {
+    /* create the log list window */
     QDockWidget *dock = new QDockWidget(tr("logs"), this);
     dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     m_logList = new QListWidget(dock);
@@ -191,6 +200,58 @@ void MainWindow::createDockWindows()
     addDockWidget(Qt::BottomDockWidgetArea, dock);
     m_menu->addAction(dock->toggleViewAction());
 
+    /*create the favorite list window */
+    dock = new QDockWidget(tr("favorite list"), this);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_favoriteList = new FavoritesList(dock);
+    dock->setWidget(m_favoriteList);
+    addDockWidget(Qt::RightDockWidgetArea, dock);
+    m_menu->addAction(dock->toggleViewAction());
+    connect(m_favoriteList, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+                this, SLOT(onFavoriteListItemDoubleClicked(QListWidgetItem*)));
+    m_favoriteList->setContextMenuPolicy(Qt::CustomContextMenu);
+     connect(m_favoriteList,SIGNAL(customContextMenuRequested(const QPoint &)),
+     this,SLOT(ProvideContextMenu(const QPoint &)));
+
+}
+FavoritesList* MainWindow::getFavoritesList()
+{
+  return m_favoriteList;
+}
+
+void MainWindow::AddPluginToFavorites(const QString& plugin_name)
+{
+    m_favoriteList->addFavorite(plugin_name);
+}
+
+void MainWindow::RemovePluginToFavorites(const QString& plugin_name)
+{
+  m_favoriteList->removeFavorite(plugin_name);
+}
+
+void MainWindow::onFavoriteListItemDoubleClicked(QListWidgetItem* pitem)
+{
+  LOG_INFO("onFavoriteListItemDoubleClicked: " + pitem->text());
+  if (!m_pGraph
+    || !m_pGraph->AddPlugin (pitem->text ().toStdString ().c_str (), NULL)) {
+      QMessageBox::warning (
+      this, "Plugin addition problem",
+      "Plugin `" + pitem->text () + "` insertion was FAILED");
+      LOG_INFO("Plugin `" +  pitem->text () + "` insertion FAILED");
+      return;
+    }
+}
+
+void MainWindow::ProvideContextMenu(const QPoint &pos)
+{
+  QPoint item = m_favoriteList->mapToGlobal(pos);
+  QMenu submenu;
+  submenu.addAction("Delete");
+  QAction* rightClickItem = submenu.exec(item);
+  if (rightClickItem && rightClickItem->text().contains("Delete") ) {
+    LOG_INFO("Delete item: " + m_favoriteList->currentItem()->text());
+    RemovePluginToFavorites(m_favoriteList->currentItem()->text());
+  }
 }
 
 void MainWindow::InsertLogLine(const QString& line, int category)
@@ -268,7 +329,6 @@ MainWindow::OpenMediaUri ()
     std::vector<ElementInfo> info = m_pGraph->GetInfo ();
     m_pGraphDisplay->update (info);
   }
-
 }
 
 void

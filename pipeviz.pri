@@ -30,6 +30,7 @@ HEADERS += src/PluginsList.h        \
 		src/CustomSettings.h        \
 		src/SeekSlider.h			\
 		src/CustomMenuAction.h		\
+		src/FavoritesList.h			\
 		src/Logger.h
 
 SOURCES += src/main.cpp             \
@@ -43,4 +44,5 @@ SOURCES += src/main.cpp             \
 		src/CustomSettings.cpp      \
 		src/SeekSlider.cpp			\
 		src/CustomMenuAction.cpp	\
+		src/FavoritesList.cpp		\
 		src/Logger.cpp
