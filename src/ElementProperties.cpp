@@ -187,7 +187,7 @@ ElementProperties::addParamSimple (GParamSpec *param, GstElement *element,
 
     default: {
       skip = true;
-      LOG_INFO("property " + propertyName + " not supported");
+      LOG_INFO("property %s not supported", propertyName.toStdString ().c_str ());
       break;
     }
   };
@@ -282,7 +282,7 @@ ElementProperties::applyClicked ()
     G_OBJECT_GET_CLASS (element), itr.key ().toStdString ().c_str ());
 
     if (!param) {
-      LOG_INFO("problem with setting " + itr.key () + " property");
+      LOG_INFO("problem with setting %s property", itr.key ().toStdString ().c_str ());
       continue;
     }
 
@@ -372,7 +372,7 @@ ElementProperties::applyClicked ()
           break;
         }
         default: {
-          LOG_INFO("property " + itr.key () + " not supported");
+          LOG_INFO("property %s not supported", itr.key ());
           break;
         }
       };
