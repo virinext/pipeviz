@@ -20,7 +20,7 @@ plugins_sort_cb (gconstpointer a, gconstpointer b)
 {
   Plugin* p1 = (Plugin*) a;
   Plugin* p2 = (Plugin*) b;
-  LOG_INFO("Sort p1: " + p1->getName () + " and  p2: " + p2->getName ());
+  LOG_INFO("Sort p1: %s and  p2: ",  p1->getName ().toStdString ().c_str (),p2->getName ().toStdString ().c_str ());
   if (p1->getRank () > p2->getRank ())
     return 1;
   else if (p1->getRank () == p2->getRank ()) {
@@ -193,7 +193,7 @@ PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
 {
 
   Q_UNUSED(previous);
-  LOG_INFO("Show Info: " + pitem->text ());
+  LOG_INFO("Show Info: %s", pitem->text ().toStdString ().c_str ());
   m_plblInfo->clear ();
   QString descr;
   descr += "<b>Plugin details</b><hr>";
@@ -206,14 +206,14 @@ PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
   GstElementFactory *factory = gst_element_factory_find (
   pitem->text ().toStdString ().c_str ());
   if (!factory) {
-    LOG_INFO("warning: " + pitem->text () + " Not Found");
+    LOG_INFO("warning: %s not found",pitem->text ().toStdString ().c_str ());
     return;
   }
 
   factory = GST_ELEMENT_FACTORY (
   gst_plugin_feature_load (GST_PLUGIN_FEATURE (factory)));
   if (!factory) {
-    LOG_INFO("warning: " + pitem->text () + " Not Found");
+    LOG_INFO("warning: %s not found",pitem->text ().toStdString ().c_str ());
     return;
   }
 #if GST_VERSION_MAJOR >= 1
@@ -226,7 +226,7 @@ PluginsListDialog::showInfo (QListWidgetItem *pitem, QListWidgetItem *previous)
   GstPlugin* plugin = gst_default_registry_find_plugin (plugin_name);
 #endif
   if (!plugin) {
-    LOG_INFO("warning: " + pitem->text () + " Not Found");
+    LOG_INFO("warning: %s not found",pitem->text ().toStdString ().c_str ());
     return;
   }
 
@@ -286,14 +286,14 @@ PluginsListDialog::insert (QListWidgetItem *pitem)
     LOG_INFO("Do not insert null item");
     return;
   }
-  LOG_INFO("Insert: " + pitem->text ());
+  LOG_INFO("Insert: %s", pitem->text ().toStdString ().c_str ());
 
   if (!m_pGraph
   || !m_pGraph->AddPlugin (pitem->text ().toStdString ().c_str (), NULL)) {
     QMessageBox::warning (
     this, "Plugin addition problem",
     "Plugin `" + pitem->text () + "` insertion was FAILED");
-    LOG_INFO("Plugin `" +  pitem->text () + "` insertion FAILED");
+    LOG_INFO("Plugin `%s insertion FAILED", pitem->text ().toStdString ().c_str ());
     return;
   }
 }
@@ -375,10 +375,10 @@ void PluginsListDialog::ProvideContextMenu(const QPoint &pos)
   QAction* rightClickItem = submenu.exec(item);
   if (rightClickItem) {
     if(rightClickItem->text().contains("Add to favorites") ) {
-      LOG_INFO("Delete item: " + current_item->text());
+      LOG_INFO("Add item: %s", current_item->text().toStdString ().c_str ());
       emit signalAddPluginToFav (current_item->text ());
     } else if(rightClickItem->text().contains("Remove from favorites") ) {
-      LOG_INFO("Delete item: " + current_item->text());
+      LOG_INFO("Delete item: %s", current_item->text().toStdString ().c_str ());
       emit signalRemPluginToFav (current_item->text ());
     }
   }

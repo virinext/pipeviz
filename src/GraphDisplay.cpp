@@ -364,8 +364,7 @@ GraphDisplay::mouseReleaseEvent (QMouseEvent *event)
 
       assert(srcPad != NULL && dstPad != NULL);
 
-      LOG_INFO("Connection from " + QString(infoSrc.m_name.c_str ()) + ":"
-      + srcPad + " to " + QString(infoDst.m_name.c_str ()) + ":" + dstPad);
+      LOG_INFO("Connection from %s:%s to %s:%s", infoSrc.m_name.c_str (), srcPad, infoDst.m_name.c_str (), dstPad);
 
       if (!m_pGraph->Connect (infoSrc.m_name.c_str (), srcPad,
                               infoDst.m_name.c_str (), dstPad)) {
@@ -767,8 +766,7 @@ GraphDisplay::disconnect (size_t elementId, size_t padId)
     }
   }
 
-  LOG_INFO("Disconnect " + QString(src.c_str ()) + ":" + srcPad.c_str()
-  + " <-> " + dst.c_str () + ":" + dstPad.c_str ());
+  LOG_INFO("Disconnect %s:%s <-> %s,%s", src.c_str (), srcPad.c_str(), dst.c_str (), dstPad.c_str ());
 
   if (src.empty () || dst.empty () || srcPad.empty () || dstPad.empty ())
     return;

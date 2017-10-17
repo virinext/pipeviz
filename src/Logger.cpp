@@ -11,6 +11,19 @@
 #include <QDebug>
 #include <QStringList>
 
+#include <time.h>
+#include <sys/time.h>
+#include <assert.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <thread>
+
+G_LOCK_DEFINE_STATIC(logger);
+
+static long int getThreadID() {
+    return syscall(SYS_gettid);
+}
+
 void
 Logger::configure_logger ()
 {
@@ -22,7 +35,8 @@ Logger::configure_logger ()
 
 Logger::Logger()
 : QThread(),
-m_fExit(false)
+m_fExit(false),
+m_level(MAX_LOG_LEVEL)
 {
 }
 
@@ -36,6 +50,75 @@ void Logger::Quit()
 {
     m_fExit = true;
     wait();
+}
+
+void Logger::createLog(TimeStampFlag flag, const char* format, ...)
+{
+    // first check if we should add the timestamp before the string
+    char* new_fmt = NULL;
+    if (flag == Logger::UseTimeStamp) {
+        const char* fmt_template = "%02d:%02d:%02d:%06ld %d 0x%x %s";
+        struct timeval tv;
+        struct timezone tz;
+        struct tm t;
+        gettimeofday(&tv, &tz);
+        localtime_r(&(tv.tv_sec), &t);
+        int len = snprintf(NULL, 0, fmt_template, t.tm_hour,t.tm_min,t.tm_sec, tv.tv_usec, getThreadID(), std::this_thread::get_id(), format);
+        if (len < 0) {
+            // cannot parse the string
+            return;
+        }
+        len++; // add 1 byte for the additional terminating null character
+        new_fmt = static_cast<char*>(malloc(sizeof(char) * len));
+        snprintf(new_fmt, len, fmt_template, t.tm_hour,t.tm_min,t.tm_sec, tv.tv_usec, getThreadID(), std::this_thread::get_id(), format);
+    }
+
+    // create the actual string (timestamp + format...)
+    const char* formatString = new_fmt ? new_fmt : format;
+    assert(formatString);
+
+    va_list aptr;
+    va_start(aptr, format);
+    va_list argcopy; // copy the va_list and use vsnprintf to get the length of the final string
+    va_copy(argcopy, aptr);
+    int len = vsnprintf(NULL, 0, formatString , argcopy);
+    va_end(argcopy);
+    if (len < 0) {
+        // cannot parse the string
+        g_free(new_fmt);
+        va_end(aptr);
+        return;
+    }
+
+    len++; // add 1 byte for the additional terminating null character.
+    char* buffer = static_cast<char*>(malloc(sizeof(char) * len));
+    int actualLen = vsprintf(buffer, formatString, aptr);
+    va_end(aptr);
+    formatString = 0;
+    g_free (new_fmt);
+    if (actualLen < 0) {
+        g_free (buffer);
+        return;
+    }
+    // if lengths are different, our code is bugged
+    assert((actualLen + 1) == len);
+
+    // dump the final string
+    G_LOCK(logger);
+    processLog(buffer);
+    G_UNLOCK(logger);
+
+    // free the buffer and flush the logs
+    g_free(buffer);
+}
+
+void Logger::incrementLogLevel() {
+    m_level++;
+    if (m_level > MAX_LOG_LEVEL)
+        m_level = MAX_LOG_LEVEL;
+    char buffer[32];
+    sprintf(buffer,"logger log level %d\n",m_level);
+    processLog(buffer);
 }
 
 void Logger::processLog(const QString& line)

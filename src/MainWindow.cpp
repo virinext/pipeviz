@@ -231,13 +231,13 @@ void MainWindow::RemovePluginToFavorites(const QString& plugin_name)
 
 void MainWindow::onFavoriteListItemDoubleClicked(QListWidgetItem* pitem)
 {
-  LOG_INFO("onFavoriteListItemDoubleClicked: " + pitem->text());
+  LOG_INFO("onFavoriteListItemDoubleClicked: %s", pitem->text().toStdString ().c_str ());
   if (!m_pGraph
     || !m_pGraph->AddPlugin (pitem->text ().toStdString ().c_str (), NULL)) {
       QMessageBox::warning (
       this, "Plugin addition problem",
       "Plugin `" + pitem->text () + "` insertion was FAILED");
-      LOG_INFO("Plugin `" +  pitem->text () + "` insertion FAILED");
+      LOG_INFO("Plugin '%s' insertion FAILED",  pitem->text ().toStdString ().c_str ());
       return;
     }
 }
@@ -249,7 +249,7 @@ void MainWindow::ProvideContextMenu(const QPoint &pos)
   submenu.addAction("Delete");
   QAction* rightClickItem = submenu.exec(item);
   if (rightClickItem && rightClickItem->text().contains("Delete") ) {
-    LOG_INFO("Delete item: " + m_favoriteList->currentItem()->text());
+    LOG_INFO("Delete item: %s", m_favoriteList->currentItem()->text().toStdString ().c_str ());
     RemovePluginToFavorites(m_favoriteList->currentItem()->text());
   }
 }
@@ -303,7 +303,7 @@ MainWindow::OpenMediaFile ()
   if (!path.isEmpty ()) {
     gchar *uri = gst_filename_to_uri (path.toStdString ().c_str (), NULL);
     if (uri) {
-      LOG_INFO("Open Source file: " + path);
+      LOG_INFO("Open Source file: %s", path.toStdString ().c_str ());
 
       m_pGraph->OpenUri (uri, NULL);
       g_free (uri);
@@ -323,7 +323,7 @@ MainWindow::OpenMediaUri ()
   QString uri = QInputDialog::getText (this, "Open Uri...", "Uri:");
 
   if (!uri.isEmpty ()) {
-    LOG_INFO("Open uri: "+ uri);
+    LOG_INFO("Open uri: %s", uri.toStdString ().c_str ());
     m_pGraph->OpenUri (uri.toStdString ().c_str (), NULL);
 
     std::vector<ElementInfo> info = m_pGraph->GetInfo ();
@@ -380,7 +380,7 @@ void
 MainWindow::Seek (int val)
 {
   if (m_pGraph->SetPosition ((double) (val) / m_pslider->maximum ()))
-    LOG_INFO("Seek to" + val);
+    LOG_INFO("Seek to %d", val);
   else
     LOG_INFO("Seek FAILED");
 }
