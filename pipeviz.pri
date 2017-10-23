@@ -12,6 +12,7 @@ INCLUDEPATH += . src
 
 CONFIG += link_pkgconfig
 
+QMAKE_CXXFLAGS += -std=c++11
 
 gitinfo.commands = src/verinfo/verinfo.sh src/version src/version_info.h
 gitinfo.target = gitinfo
