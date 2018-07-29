@@ -10,27 +10,26 @@
 
 #include <QDebug>
 #include <QStringList>
+#include <QTime>
 
-#include <time.h>
-#include <sys/time.h>
 #include <assert.h>
 #include <unistd.h>
-#include <sys/syscall.h>
 #include <thread>
 
 G_LOCK_DEFINE_STATIC(logger);
 
 static long int getThreadID() {
-    return syscall(SYS_gettid);
+    return qintptr(QThread::currentThreadId());
 }
 
 void
 Logger::configure_logger ()
 {
   QString lastGstDebugString = CustomSettings::lastGstDebugString ();
-  setenv (lastGstDebugString.split ("=").at (0).toStdString ().c_str (), lastGstDebugString.split ("=").at (1).toStdString ().c_str (), 1);
-  setenv ("GST_DEBUG_NO_COLOR", "1", 1);
-  setenv ("GST_DEBUG_FILE", "/tmp/gst_pipeviz.txt", 1);
+  qputenv(lastGstDebugString.split("=").at(0).toStdString ().c_str(),
+          lastGstDebugString.split("=").at(1).toLocal8Bit());
+  qputenv("GST_DEBUG_NO_COLOR", QByteArray("1"));
+  qputenv("GST_DEBUG_FILE",     QByteArray("gst_pipeviz.txt"));
 }
 
 Logger::Logger()
@@ -57,20 +56,17 @@ void Logger::createLog(TimeStampFlag flag, const char* format, ...)
     // first check if we should add the timestamp before the string
     char* new_fmt = NULL;
     if (flag == Logger::UseTimeStamp) {
-        const char* fmt_template = "%02d:%02d:%02d:%06ld %d 0x%x %s";
-        struct timeval tv;
-        struct timezone tz;
-        struct tm t;
-        gettimeofday(&tv, &tz);
-        localtime_r(&(tv.tv_sec), &t);
-        int len = snprintf(NULL, 0, fmt_template, t.tm_hour,t.tm_min,t.tm_sec, tv.tv_usec, getThreadID(), std::this_thread::get_id(), format);
+        QString szTimestamp(QTime::currentTime().toString("HH:mm:ss:zzz"));
+
+        const char* fmt_template = "%s %d 0x%x %s";
+        int len = snprintf(NULL, 0, fmt_template, szTimestamp.toStdString().c_str(), getThreadID(), std::this_thread::get_id(), format);
         if (len < 0) {
             // cannot parse the string
             return;
         }
         len++; // add 1 byte for the additional terminating null character
         new_fmt = static_cast<char*>(malloc(sizeof(char) * len));
-        snprintf(new_fmt, len, fmt_template, t.tm_hour,t.tm_min,t.tm_sec, tv.tv_usec, getThreadID(), std::this_thread::get_id(), format);
+        snprintf(new_fmt, len, fmt_template, szTimestamp.toStdString().c_str(), getThreadID(), std::this_thread::get_id(), format);
     }
 
     // create the actual string (timestamp + format...)
@@ -271,7 +267,7 @@ void Logger::run()
   FILE* file;
   gchar* line;
 
-  file = fopen("/tmp/gst_pipeviz.txt", "r");
+  file = fopen("gst_pipeviz.txt", "r");
   if(!file)
     return;
 
