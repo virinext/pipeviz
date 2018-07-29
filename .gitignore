@@ -6,3 +6,4 @@ pipeviz
 *.o
 moc_*
 src/version_info.h
+pipeviz.pro.user

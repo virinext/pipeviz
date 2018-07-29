@@ -10,7 +10,7 @@ QT += xml
 QT += core
 INCLUDEPATH += . src 
 
-CONFIG += link_pkgconfig
+CONFIG += gstreamer
 
 QMAKE_CXXFLAGS += -std=c++11
 

@@ -1,0 +1,51 @@
+# =============================================================
+# This optional feature file adds GStreamer dependencies
+# =============================================================
+unix {
+    CONFIG    += link_pkgconfig
+    PKGCONFIG += gstreamer-1.0
+} else {
+
+    GSTREAMER_PATH = $$clean_path($$(GSTREAMER_1_0_ROOT_X86))
+    if(isEmpty(GSTREAMER_PATH)) {
+        GSTREAMER_PATH = $$clean_path($$(GSTREAMER_1_0_ROOT_X86_64))
+    }
+
+    if(isEmpty(GSTREAMER_PATH)|!exists($${GSTREAMER_PATH})) {
+
+        text = "\"GStreamer\" not found: to be able to use the debugger, don't forget to add"
+        text = "$${text} \"%GSTREAMER_1_0_ROOT_X86_64%\bin\" in your PATH"
+        !build:warning("$${text}")
+
+    } else {
+
+        DEFINES += GST_USE_UNSTABLE_API
+
+        GST_INCLUDEPATH = \
+            $$clean_path($$GSTREAMER_PATH/include/gstreamer-1.0) \
+            $$clean_path($$GSTREAMER_PATH/include/glib-2.0) \
+            $$clean_path($$GSTREAMER_PATH/lib/glib-2.0/include)
+        *-g++ {
+            # To avoid warnings due to GStreamer, use -isystem automatically for any GStreamer system header:
+            for(somelib, $$list($$GST_INCLUDEPATH)) {
+                QMAKE_CXXFLAGS += -isystem $${somelib}
+            }
+        } else {
+            INCLUDEPATH += $${GST_INCLUDEPATH}
+        }
+        unset(GST_INCLUDEPATH)
+
+        win32-g++ {
+            LIBS += \
+                $${GSTREAMER_PATH}/lib/glib-2.0.lib \
+                $${GSTREAMER_PATH}/lib/gobject-2.0.lib \
+                $${GSTREAMER_PATH}/lib/gstreamer-1.0.lib
+        } else {
+            LIBS += \
+                -L$$GSTREAMER_PATH/lib \
+                -lglib-2.0 \
+                -lgobject-2.0 \
+                -lgstreamer-1.0
+        }
+    } # GStreamer found
+}
