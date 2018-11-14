@@ -130,10 +130,11 @@ ElementProperties::addParamSimple (GParamSpec *param, GstElement *element,
 
   QString propertyName = g_param_spec_get_name (param);
   QString propertyValue;
+  GType type = G_VALUE_TYPE (&value);
 
   bool skip = false;
 
-  switch (G_VALUE_TYPE (&value)) {
+  switch (type) {
     case G_TYPE_STRING: {
       const char *string_val = g_value_get_string (&value);
       propertyValue = string_val;
@@ -186,6 +187,16 @@ ElementProperties::addParamSimple (GParamSpec *param, GstElement *element,
     }
 
     default: {
+      if (type == g_type_from_name("GstCaps")) {
+        GstCaps *gstcaps;
+        g_object_get (G_OBJECT (element), param->name, &gstcaps, NULL);
+        const char *string_val = gst_caps_to_string (gstcaps);
+        if (gstcaps == NULL)
+          string_val = "ANY";
+        propertyValue = string_val;
+        break;
+      }
+
       skip = true;
       LOG_INFO("property %s not supported", propertyName.toStdString ().c_str ());
       break;
@@ -310,7 +321,8 @@ ElementProperties::applyClicked ()
       }
     }
     else {
-      switch (param->value_type) {
+      GType type = param->value_type;
+      switch (type) {
         case G_TYPE_STRING: {
           g_object_set (G_OBJECT (element), propName,
                         valStr.toStdString ().c_str (), NULL);
@@ -372,6 +384,20 @@ ElementProperties::applyClicked ()
           break;
         }
         default: {
+          if (type == g_type_from_name("GstCaps")) {
+            GstCaps *oldval;
+            GstCaps *newval = gst_caps_from_string (valStr.toStdString ().c_str ());
+            g_object_get (G_OBJECT (element), propName, &oldval, NULL);
+
+            if (oldval != newval && oldval != NULL) {
+              /* Release old */
+              gst_caps_unref (oldval);
+            }
+
+            g_object_set (G_OBJECT (element), propName, newval, NULL);
+            break;
+          }
+
           LOG_INFO("property %s not supported", itr.key ());
           break;
         }
