@@ -19,7 +19,7 @@
 G_LOCK_DEFINE_STATIC(logger);
 
 static long int getThreadID() {
-    return qintptr(QThread::currentThreadId());
+    return quintptr(QThread::currentThreadId());
 }
 
 void
