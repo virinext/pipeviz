@@ -38,7 +38,7 @@ Building:
 
 cd pipeviz
 
-qmake pipeviz.pro
+QMAKEFEATURES=. qmake pipeviz.pro
 
 make gitinfo
 
