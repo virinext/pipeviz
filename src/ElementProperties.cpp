@@ -398,7 +398,7 @@ ElementProperties::applyClicked ()
             break;
           }
 
-          LOG_INFO("property %s not supported", itr.key ());
+          LOG_INFO("property %s not supported", itr.key ().constData());
           break;
         }
       };
