@@ -7,3 +7,5 @@ pipeviz
 moc_*
 src/version_info.h
 pipeviz.pro.user
+pipeviz.app
+.qmake.stash

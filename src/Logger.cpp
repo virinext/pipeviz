@@ -124,7 +124,7 @@ void Logger::processLog(const QString& line)
 
 //#define GST_TIME_FORMAT "u:%02u:%02u.%09u"
 #define GST_TIME_FORMAT "%s"
-#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
+#define PRINT_FMT " " PID_FMT " " PTR_FMT " %s " CAT_FMT " %s\n"
 
 struct GSTLog {
   gchar* date;
