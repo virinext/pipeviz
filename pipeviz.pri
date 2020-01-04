@@ -8,17 +8,17 @@ TARGET = pipeviz
 QT += widgets
 QT += xml
 QT += core
-INCLUDEPATH += . src 
+INCLUDEPATH += $$OUT_PWD/src
 
 CONFIG += gstreamer
 
 QMAKE_CXXFLAGS += -std=c++11
 
-gitinfo.commands = src/verinfo/verinfo.sh src/version src/version_info.h
-gitinfo.target = gitinfo
+gitinfo.commands = $$PWD/src/verinfo/verinfo.sh $$PWD/src/version.in $$OUT_PWD/src/version_info.h
+gitinfo.target = $$OUT_PWD/src/version_info.h
 
 QMAKE_EXTRA_TARGETS += gitinfo
-
+PRE_TARGETDEPS += $$OUT_PWD/src/version_info.h
 
 # Input
 HEADERS += src/PluginsList.h        \
